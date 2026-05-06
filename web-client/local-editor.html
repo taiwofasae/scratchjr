@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:xlink="http://www.w3.org/1999/xlink">
+<head>
+    <meta charset="utf-8" />
+    <title>ScratchJr - Web Editor</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta http-equiv="cache-control" content="no-cache" />
+    
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/editor.css">
+    <link rel="stylesheet" href="css/editorleftpanel.css">
+    <link rel="stylesheet" href="css/editorstage.css">
+    <link rel="stylesheet" href="css/editormodal.css">
+    <link rel="stylesheet" href="css/librarymodal.css">
+    <link rel="stylesheet" href="css/paintlook.css">
+</head>
+<body style="background: white">
+    <!-- Required DOM elements -->
+    <div class="frame" id="frame"></div>
+    <div class="libframe" id="libframe"></div>
+    <div class="paintframe" id="paintframe"></div>
+
+    <!-- Load Snap.svg (required for SVG rendering) -->
+    <script src="vendors/snap/snap.svg-min.js"></script>
+    
+    <!-- Set page to EDITOR mode - THIS IS CRITICAL -->
+    <script>
+        window.scratchJrPage = 'editor';
+    </script>
+    
+    <!-- Load the CORRECT bundle -->
+    <script src="index77.js"></script>
+    
+    <!-- URL Parameter Loader -->
+    <script>
+        (function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const sjrUrl = urlParams.get('sjr') || urlParams.get('file_url');
+            
+            if (!sjrUrl) {
+                console.log('[Loader] No project URL provided');
+                return;
+            }
+            
+            console.log('[Loader] Loading project from:', sjrUrl);
+            
+            // Fix GitHub URLs
+            let finalUrl = sjrUrl;
+            if (sjrUrl.includes('github.com') && sjrUrl.includes('/blob/')) {
+                finalUrl = sjrUrl.replace('github.com', 'raw.githubusercontent.com').replace('/blob/', '/');
+                console.log('[Loader] Converted to raw URL:', finalUrl);
+            }
+            
+            // Fetch and inject the project
+            fetch(finalUrl)
+                .then(res => {
+                    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                    return res.blob();
+                })
+                .then(blob => {
+                    const reader = new FileReader();
+                    reader.onloadend = () => {
+                        const base64 = reader.result.split(',')[1];
+                        console.log('[Loader] Loaded', Math.round(base64.length / 1024), 'KB');
+                        
+                        // Wait for ScratchJr to be ready and inject
+                        let attempts = 0;
+                        const tryInject = () => {
+                            attempts++;
+                            
+                            // Try different injection methods
+                            if (window.ScratchJr && typeof window.ScratchJr.loadProjectFromSjr === 'function') {
+                                console.log('[Loader] Injecting via ScratchJr.loadProjectFromSjr');
+                                window.ScratchJr.loadProjectFromSjr(base64);
+                                return;
+                            }
+                            if (window.OS && typeof window.OS.loadProjectFromSjr === 'function') {
+                                console.log('[Loader] Injecting via OS.loadProjectFromSjr');
+                                window.OS.loadProjectFromSjr(base64);
+                                return;
+                            }
+                            if (window.iOS && typeof window.iOS.loadProjectFromSjr === 'function') {
+                                console.log('[Loader] Injecting via iOS.loadProjectFromSjr');
+                                window.iOS.loadProjectFromSjr(base64);
+                                return;
+                            }
+                            
+                            if (attempts < 30) {
+                                setTimeout(tryInject, 500);
+                            } else {
+                                console.error('[Loader] Failed to find injection method');
+                            }
+                        };
+                        
+                        setTimeout(tryInject, 1000);
+                    };
+                    reader.readAsDataURL(blob);
+                })
+                .catch(err => console.error('[Loader] Error:', err));
+        })();
+    </script>
+</body>
+</html>

@@ -50,7 +50,118 @@ h3 {
     font-size: 1.3846em; /* 18px */
 }
 
-h4 {
-    font-size: 1.2308em; /* 16px */
-    line-height: 1.25em; /* 20px */
+/* Upload Button Styling */
+.topbar-nav li.upload {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    padding: 0 15px;
+    background: #ff9000;
+    border-radius: 20px;
+    margin: 5px;
+    height: 30px;
+    color: white;
+    font-weight: bold;
 }
+
+.upload-icon {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border: 2px solid white;
+    border-top: none;
+    position: relative;
+    margin-right: 10px;
+}
+
+.upload-icon::before {
+    content: "";
+    position: absolute;
+    top: -6px;
+    left: 4px;
+    width: 2px;
+    height: 10px;
+    background: white;
+}
+
+.upload-icon::after {
+    content: "";
+    position: absolute;
+    top: -6px;
+    left: 1px;
+    width: 6px;
+    height: 6px;
+    border-top: 2px solid white;
+    border-left: 2px solid white;
+    transform: rotate(45deg);
+}
+
+/* Loading Spinner Animation */
+.spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #ff9000;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Modal Styling */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+.modal-content {
+    background: white;
+    padding: 30px;
+    border-radius: 15px;
+    width: 400px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    text-align: center;
+}
+
+.modal-content h3 {
+    margin-bottom: 15px;
+    color: #4c4d4f;
+}
+
+.modal-content input {
+    width: 100%;
+    padding: 10px;
+    margin: 15px 0;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    font-size: 14px;
+}
+
+.modal-buttons {
+    display: flex;
+    justify-content: space-around;
+    margin-top: 20px;
+}
+
+.modal-buttons button {
+    padding: 10px 25px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.btn-cancel { background: #eee; color: #666; }
+.btn-load { background: #ff9000; color: white; }
+

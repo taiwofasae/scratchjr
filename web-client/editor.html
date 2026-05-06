@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>ScratchJr Editor</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/editor.css">
+    <link rel="stylesheet" href="css/editorleftpanel.css">
+    <link rel="stylesheet" href="css/editorstage.css">
+    <link rel="stylesheet" href="css/editormodal.css">
+    <link rel="stylesheet" href="css/librarymodal.css">
+    <link rel="stylesheet" href="css/paintlook.css">
+</head>
+<body style="background: white">
+    <!-- Required DOM elements - ALL THREE must exist -->
+    <div class="frame" id="frame"></div>
+    <div class="libframe" id="libframe"></div>
+    <div class="paintframe" id="paintframe"></div>
+
+    <!-- Set page to EDITOR mode BEFORE loading bundle -->
+    <script>
+        window.scratchJrPage = 'editor';
+        window.Settings = window.Settings || {
+            edition: "free",
+            scratchJrVersion: "Webv01",
+            defaultLocale: "en",
+            stageColor: "#F5F2F7",
+            defaultSprite: "Star.svg",
+            autoSaveInterval: 30000,
+            shareEnabled: true,
+            supportedLocales: { English: "en" }
+        };
+    </script>
+
+    <!-- Load dependencies -->
+    <script src="js/sql-wasm.js"></script>
+    <script src="js/web-bridge.js"></script>
+    <script src="js/app.bundle.js"></script>
+
+    <!-- URL Parameter Loader -->
+    <script>
+        (function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const sjrUrl = urlParams.get('sjr') || urlParams.get('file_url');
+            
+            if (!sjrUrl) return;
+            
+            console.log('[Loader] Loading project from:', sjrUrl);
+            
+            // Fix GitHub URLs
+            let finalUrl = sjrUrl;
+            if (sjrUrl.includes('github.com') && sjrUrl.includes('/blob/')) {
+                finalUrl = sjrUrl.replace('github.com', 'raw.githubusercontent.com').replace('/blob/', '/');
+            }
+            
+            // Function to inject project
+            function injectProject(base64data) {
+                console.log('[Loader] Trying to inject project...');
+                
+                // Try all possible injection methods
+                if (window.ScratchJr && window.ScratchJr.loadProjectFromSjr) {
+                    window.ScratchJr.loadProjectFromSjr(base64data);
+                    return true;
+                }
+                if (window.OS && window.OS.loadProjectFromSjr) {
+                    window.OS.loadProjectFromSjr(base64data);
+                    return true;
+                }
+                if (window.iOS && window.iOS.loadProjectFromSjr) {
+                    window.iOS.loadProjectFromSjr(base64data);
+                    return true;
+                }
+                if (window.tablet && window.tablet.loadProjectFromSjr) {
+                    window.tablet.loadProjectFromSjr(base64data);
+                    return true;
+                }
+                return false;
+            }
+            
+            // Fetch and load
+            fetch(finalUrl)
+                .then(res => res.blob())
+                .then(blob => {
+                    const reader = new FileReader();
+                    reader.onloadend = () => {
+                        const base64 = reader.result.split(',')[1];
+                        console.log('[Loader] Loaded', Math.round(base64.length/1024), 'KB');
+                        
+                        // Try to inject immediately
+                        if (!injectProject(base64)) {
+                            // Wait for ScratchJr to initialize
+                            let attempts = 0;
+                            const interval = setInterval(() => {
+                                attempts++;
+                                if (injectProject(base64)) {
+                                    clearInterval(interval);
+                                    console.log('[Loader] Project loaded!');
+                                } else if (attempts > 30) {
+                                    clearInterval(interval);
+                                    console.error('[Loader] Failed to inject project');
+                                }
+                            }, 500);
+                        }
+                    };
+                    reader.readAsDataURL(blob);
+                })
+                .catch(err => console.error('[Loader] Error:', err));
+        })();
+    </script>
+</body>
+</html>

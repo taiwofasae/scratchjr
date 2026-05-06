@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>ScratchJr Editor Test (URL Loader)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/editor.css">
+    <link rel="stylesheet" href="css/editorleftpanel.css">
+    <link rel="stylesheet" href="css/editorstage.css">
+    <link rel="stylesheet" href="css/editormodal.css">
+    <link rel="stylesheet" href="css/librarymodal.css">
+    <link rel="stylesheet" href="css/paintlook.css">
+</head>
+<body style="background: white; margin: 0; overflow: hidden;">
+    <div class="frame" id="frame"></div>
+    <div class="libframe" id="libframe"></div>
+    <div class="paintframe" id="paintframe"></div>
+
+    <script>
+        // Set page to editor mode
+        window.scratchJrPage = 'editor';
+        
+        // Default settings for web environment
+        window.Settings = {
+            edition: "free",
+            scratchJrVersion: "Webv01",
+            defaultLocale: "en",
+            stageColor: "#F5F2F7",
+            defaultSprite: "Star.svg",
+            autoSaveInterval: 30000,
+            shareEnabled: true,
+            supportedLocales: { English: "en" }
+        };
+    </script>
+
+    <!-- Load the custom build -->
+    <script src="js/index77.js"></script>
+    
+    <script>
+        // The URL loader is built into index77.js via index-url.js
+        console.log('[Test] ScratchJr URL Loader version ready');
+    </script>
+</body>
+</html>

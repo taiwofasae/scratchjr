@@ -11,8 +11,12 @@
 <head>
     <title>ScratchJr Web Viewer</title>
     <link rel="stylesheet" href="css/base.css" type="text/css">
-    <link rel="stylesheet" href="css/lobby.css" type="text/css">
     <link rel="stylesheet" href="css/editor.css" type="text/css">
+    <link rel="stylesheet" href="css/editorleftpanel.css" type="text/css">
+    <link rel="stylesheet" href="css/editorstage.css" type="text/css">
+    <link rel="stylesheet" href="css/editormodal.css" type="text/css">
+    <link rel="stylesheet" href="css/librarymodal.css" type="text/css">
+    <link rel="stylesheet" href="css/paintlook.css" type="text/css">
 
 </head>
 
@@ -26,6 +30,11 @@
                 <div></div>
                 <li class="home" id="hometab">
                     <span class="home-icon"></span>
+                </li>
+                <div></div>
+                <li class="upload" id="uploadtab" onclick="openUploadModal()">
+                    <span class="upload-icon"></span>
+                    <span class="upload-text">Upload SJR</span>
                 </li>
                 <div></div>
                 <li class="help" id="helptab">
@@ -56,6 +65,26 @@
             </div>
         </div>
         <div class="contentwrap" id="wrapc"></div>
+        <div class="libframe" id="libframe"></div>
+        <div class="paintframe" id="paintframe"></div>
+
+        <!-- CodeJr Style Upload Modal -->
+        <div id="uploadModal" class="modal-overlay" style="display:none;">
+            <div class="modal-content">
+                <h3>Load Remote Project</h3>
+                <p>Enter the URL of a .sjr file to automate the import:</p>
+                <input type="text" id="sjrUrlInput" placeholder="https://example.com/project.sjr" />
+                <div class="modal-buttons">
+                    <button class="btn-cancel" onclick="closeUploadModal()">Cancel</button>
+                    <button class="btn-load" id="loadBtn" onclick="triggerManualLoad()">Load Project</button>
+                </div>
+                <!-- Loading Spinner -->
+                <div id="loaderContainer" style="display:none; margin-top: 20px; flex-direction: column; align-items: center;">
+                    <div class="spinner"></div>
+                    <p style="margin-top:10px; font-size: 12px; color: #666;">Fetching project data...</p>
+                </div>
+            </div>
+        </div>
         <div class="footer off" id="footer">
             <ul class="footer-nav" id="footernav">
                 <li class="tab" id="abouttab">
@@ -84,9 +113,33 @@
 
     </div>
 
-    <!-- 1. Tell the ScratchJr bundle which page to render -->
+    <!-- This tells the ScratchJr bundle which page to render -->
     <script>
-        window.scratchJrPage = 'home';
+        window.scratchJrPage = 'editor';
+    </script>
+
+    <script>
+        function openUploadModal() {
+            document.getElementById('uploadModal').style.display = 'flex';
+        }
+
+        function closeUploadModal() {
+            document.getElementById('uploadModal').style.display = 'none';
+        }
+
+        function triggerManualLoad() {
+            const url = document.getElementById('sjrUrlInput').value;
+            if (url) {
+                // Show loader and hide buttons
+                document.getElementById('loaderContainer').style.display = 'flex';
+                document.querySelector('.modal-buttons').style.display = 'none';
+                
+                // Small delay to show the spinner before redirect
+                setTimeout(() => {
+                    window.location.href = `index.html?sjr=${encodeURIComponent(url)}`;
+                }, 800);
+            }
+        }
     </script>
 
     <script>
@@ -103,14 +156,73 @@
     <!-- 2. The Database Engine (sql.js / Wasm) -->
     <script type="text/javascript" src="js/sql-wasm.js"></script>
 
-    <!-- 3. The ScratchJr Brain -->
-    <script type="text/javascript" src="js/app.bundle.js"></script>
-
-    <!-- 4. The Fake Tablet Bridge (mocks window.tablet) -->
+    <!-- 3. The Fake Tablet Bridge (mocks window.tablet) -->
     <script type="text/javascript" src="js/web-bridge.js"></script>
 
+    <!-- 4. The ScratchJr Brain (Engine) -->
+    <script type="text/javascript" src="js/app.bundle.js"></script>
 
-    <!-- 5. URL-based project auto-loader (Milestone 2) -->
+    <!-- 4.5. Instantiate ScratchJr if not already done -->
+    <script>
+        (function ensureScratchJrInstance() { 
+            console.log("[Init] Starting ScratchJr initialization..."); 
+            
+            // Function to check if ScratchJr is ready 
+            function tryInit() { 
+                // Check if the main class exists and has appinit 
+                if (window.ScratchJr && typeof window.ScratchJr.appinit === 'function') { 
+                    console.log("[Init] Found ScratchJr.appinit, initializing..."); 
+                    
+                    // Create settings if not exists 
+                    if (!window.Settings) { 
+                        window.Settings = { 
+                            edition: "free", 
+                            scratchJrVersion: "web", 
+                            defaultLocale: "en", 
+                            stageColor: "#FFFFFF", 
+                            defaultSprite: "Cat", 
+                            autoSaveInterval: 30000, 
+                            shareEnabled: true, 
+                            supportedLocales: { English: "en" } 
+                        }; 
+                    } 
+                    
+                    // Call appinit to initialize the engine 
+                    window.ScratchJr.appinit(window.ScratchJr.version || "1.2.0"); 
+                    
+                    // Force the editor to load if it's the target page
+                    if (window.scratchJrPage === 'editor') {
+                        console.log("[Init] Forcing editor mode initialization...");
+                    }                            console.log("[Init] Loading pending project..."); 
+                            // Try the candidates via the bridge's method
+                            if (window.iOS && typeof window.iOS.loadProjectFromSjr === 'function') {
+                                window.iOS.loadProjectFromSjr(window.pendingSjrData);
+                            }
+                        } 
+                    }, 500); 
+                    return true; 
+                } 
+                return false; 
+            } 
+            
+            // Try immediately, then retry 
+            if (!tryInit()) { 
+                console.log("[Init] Waiting for ScratchJr.appinit..."); 
+                var initInterval = setInterval(function() { 
+                    if (tryInit()) { 
+                        clearInterval(initInterval); 
+                    } 
+                }, 200); 
+                // Timeout after 10 seconds 
+                setTimeout(function() { 
+                    clearInterval(initInterval); 
+                    console.error("[Init] Failed to initialize ScratchJr after timeout"); 
+                }, 10000); 
+            } 
+        })(); 
+    </script>
+
+    <!-- 5. URL-based project auto-loader -->
     <script type="text/javascript" src="js/auto-loader.js"></script>
 
 </body>
