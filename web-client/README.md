@@ -12,8 +12,6 @@ To make the native tablet application work in a web browser environment, we use 
 
 **Crucially, it is the `window.tablet` object mock that intercepts native calls, which enables browser-based clicks and prevents the UI from hanging.**
 
-*Note for Taiwo Fasae: The bridge is designed to be type-agnostic. It handles both `string` and `object` payloads from the ScratchJr core, ensuring that pre-parsed payloads do not cause JSON parsing errors.*
-
 ## Feature Guide
 The web client includes an `auto-loader.js` script that will soon support loading remote projects via a URL parameter.
 
