@@ -3,6 +3,7 @@
   "version": "1.2.0",
   "description": "ScratchJr",
   "scripts": {
+    "start": "node serve.js",
     "lint": "eslint src/**",
     "watch": "webpack --mode=development --progress --hide-modules --watch",
     "dev": "webpack --mode=development --progress --hide-modules",
