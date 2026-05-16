@@ -51,7 +51,7 @@ Three sequential phases build on each other: first get the ScratchJr UI renderin
     - This ensures the `defer`-loaded script exists and the page loads without errors.
     - _Requirements: 2.4_
 
-  - [-] 1.7 Checkpoint — verify Phase 1 manually
+  - [x] 1.7 Checkpoint — verify Phase 1 manually
     - Serve `web-client/` from `localhost:8000` (e.g. `python3 -m http.server 8000`).
     - Open `http://localhost:8000/web-client/index.html` in a browser.
     - Confirm the ScratchJr editor UI renders (stage, sprite area, block palette visible) with an empty project.

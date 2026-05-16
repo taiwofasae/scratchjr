@@ -31,5 +31,5 @@
 ios/Pods
 google-services.json
 GoogleService-Info.plist
-
+.kiro
 .claude/
