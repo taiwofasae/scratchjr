@@ -119,27 +119,21 @@
     }
 
     // Loads parsed project data into the running ScratchJr runtime.
-    // The .sjr data.json is a metadata wrapper — the actual project is in the
-    // 'json' field, which is what Project.loadData expects.
     function loadProjectIntoRuntime(projectData) {
         return new Promise(function (resolve, reject) {
             try {
-                // Unwrap: data.json contains the real project (pages, sprites etc.)
-                // It may be a string (needs parsing) or already an object.
                 var projectJson = projectData.json;
                 if (!projectJson) {
-                    // No wrapper — assume projectData itself is the project.
                     projectJson = projectData;
                 }
                 if (typeof projectJson === 'string') {
                     projectJson = JSON.parse(projectJson);
                 }
-
                 if (!projectJson.pages) {
                     throw new Error('Project data is missing pages — unexpected format.');
                 }
-
-                window.Project.clear();
+                // Don't call Project.clear() — loadData handles its own reset
+                // and clear() can leave the UI in a broken state.
                 window.Project.loadData(projectJson, function () {
                     hideOverlay();
                     resolve();
