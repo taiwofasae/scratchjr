@@ -3,6 +3,7 @@
   "version": "1.2.0",
   "description": "ScratchJr",
   "scripts": {
+    "setup": "node setup.js",
     "start": "node serve.js",
     "lint": "eslint src/**",
     "watch": "cross-env NODE_OPTIONS=--openssl-legacy-provider webpack --mode=development --progress --hide-modules --watch",

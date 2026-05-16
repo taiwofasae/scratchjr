@@ -183,6 +183,18 @@
 
     // --- URL parameter loading (Phase 3) ---
 
+    // Returns the URL to fetch a remote .sjr file.
+    // On localhost, fetches directly (CORS allowed by the test host).
+    // On any other host, routes through the server-side proxy to bypass CORS.
+    function resolveFileUrl(fileUrl) {
+        var isLocalhost = window.location.hostname === 'localhost' ||
+                          window.location.hostname === '127.0.0.1';
+        if (isLocalhost) {
+            return fileUrl;
+        }
+        return '/proxy?url=' + encodeURIComponent(fileUrl);
+    }
+
     function readFileUrlParam() {
         var params = new URLSearchParams(window.location.search);
         var fileUrl = params.get('file_url');
@@ -208,7 +220,7 @@
         showOverlay('Downloading project...');
         window.WebAdapter.assetStore = {};
 
-        fetch(fileUrl, { mode: 'cors' })
+        fetch(resolveFileUrl(fileUrl), { mode: 'cors' })
             .then(function (response) {
                 if (!response.ok) {
                     throw new Error('HTTP ' + response.status + ': ' + response.statusText);
