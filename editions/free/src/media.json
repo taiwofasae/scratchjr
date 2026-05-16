@@ -1,14 +1,50 @@
 {
+    "path": "https://codejr.org/scratchjr/svglibrary/",
     "assetLibraryVersion": 1,
-    "path": "./svglibrary/",
-    "samples": [
-	       "samples/Star.txt"
-    ],
-    "backgrounds": [
-        {"md5":"Farm.svg","width":480,"height":360,"ext":"svg","name":"Farm"}
-    ],
     "sprites": [
-        {"md5":"Star.svg","width":80,"height":101,"ext":"svg","name":"Star","order":"characters,07 weather","tags":["characters","07 weather"]}
+        {"md5": "Tic.svg",        "width": 80, "height": 101, "ext": "svg", "order": "characters,01 fantasy"},
+        {"md5": "Star.svg",       "width": 80, "height": 101, "ext": "svg", "order": "characters,07 weather"},
+        {"md5": "Cat.svg",        "width": 80, "height": 101, "ext": "svg", "order": "characters,02 animals"},
+        {"md5": "Dog.svg",        "width": 80, "height": 101, "ext": "svg", "order": "characters,02 animals"},
+        {"md5": "Rabbit.svg",     "width": 80, "height": 101, "ext": "svg", "order": "characters,02 animals"},
+        {"md5": "Chicken.svg",    "width": 80, "height": 101, "ext": "svg", "order": "characters,02 animals"},
+        {"md5": "Pig.svg",        "width": 80, "height": 101, "ext": "svg", "order": "characters,02 animals"},
+        {"md5": "Horse.svg",      "width": 80, "height": 101, "ext": "svg", "order": "characters,02 animals"},
+        {"md5": "Zebra.svg",      "width": 80, "height": 101, "ext": "svg", "order": "characters,02 animals"},
+        {"md5": "Monkey.svg",     "width": 80, "height": 101, "ext": "svg", "order": "characters,02 animals"},
+        {"md5": "Penguin.svg",    "width": 80, "height": 101, "ext": "svg", "order": "characters,02 animals"},
+        {"md5": "Elephant.svg",   "width": 80, "height": 101, "ext": "svg", "order": "characters,02 animals"},
+        {"md5": "Giraffe.svg",    "width": 80, "height": 101, "ext": "svg", "order": "characters,02 animals"},
+        {"md5": "Frog.svg",       "width": 80, "height": 101, "ext": "svg", "order": "characters,02 animals"},
+        {"md5": "Butterfly.svg",  "width": 80, "height": 101, "ext": "svg", "order": "characters,02 animals"},
+        {"md5": "Crab.svg",       "width": 80, "height": 101, "ext": "svg", "order": "characters,03 sea"},
+        {"md5": "Whale.svg",      "width": 80, "height": 101, "ext": "svg", "order": "characters,03 sea"},
+        {"md5": "Dragon.svg",     "width": 80, "height": 101, "ext": "svg", "order": "characters,01 fantasy"},
+        {"md5": "Fairy.svg",      "width": 80, "height": 101, "ext": "svg", "order": "characters,01 fantasy"},
+        {"md5": "Wizard.svg",     "width": 80, "height": 101, "ext": "svg", "order": "characters,01 fantasy"},
+        {"md5": "Astronaut.svg",  "width": 80, "height": 101, "ext": "svg", "order": "characters,05 space"},
+        {"md5": "Boy1.svg",       "width": 80, "height": 101, "ext": "svg", "order": "characters,04 people"},
+        {"md5": "Girl1.svg",      "width": 80, "height": 101, "ext": "svg", "order": "characters,04 people"},
+        {"md5": "Girl2.svg",      "width": 80, "height": 101, "ext": "svg", "order": "characters,04 people"},
+        {"md5": "Girl3.svg",      "width": 80, "height": 101, "ext": "svg", "order": "characters,04 people"},
+        {"md5": "Father.svg",     "width": 80, "height": 101, "ext": "svg", "order": "characters,04 people"},
+        {"md5": "Mother.svg",     "width": 80, "height": 101, "ext": "svg", "order": "characters,04 people"},
+        {"md5": "Baby.svg",       "width": 80, "height": 101, "ext": "svg", "order": "characters,04 people"}
     ],
-    "sounds": ["pop.mp3"]
+    "legacySprites": [],
+    "backgrounds": [
+        {"md5": "Classroom.svg",  "width": 480, "height": 360, "ext": "svg", "order": "backgrounds,01 indoors"},
+        {"md5": "Bedroom.svg",    "width": 480, "height": 360, "ext": "svg", "order": "backgrounds,01 indoors"},
+        {"md5": "Library.svg",    "width": 480, "height": 360, "ext": "svg", "order": "backgrounds,01 indoors"},
+        {"md5": "Farm.svg",       "width": 480, "height": 360, "ext": "svg", "order": "backgrounds,02 outdoors"},
+        {"md5": "City.svg",       "width": 480, "height": 360, "ext": "svg", "order": "backgrounds,02 outdoors"},
+        {"md5": "Park.svg",       "width": 480, "height": 360, "ext": "svg", "order": "backgrounds,02 outdoors"},
+        {"md5": "Desert.svg",     "width": 480, "height": 360, "ext": "svg", "order": "backgrounds,02 outdoors"},
+        {"md5": "Jungle.svg",     "width": 480, "height": 360, "ext": "svg", "order": "backgrounds,02 outdoors"},
+        {"md5": "Castle.svg",     "width": 480, "height": 360, "ext": "svg", "order": "backgrounds,03 fantasy"},
+        {"md5": "Space.svg",      "width": 480, "height": 360, "ext": "svg", "order": "backgrounds,03 fantasy"},
+        {"md5": "Underwater.svg", "width": 480, "height": 360, "ext": "svg", "order": "backgrounds,03 fantasy"}
+    ],
+    "sounds": [],
+    "samples": []
 }

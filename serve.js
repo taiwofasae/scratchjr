@@ -1,5 +1,5 @@
 // serve.js
-// Minimal static file server for local development.
+// Static file server for local development.
 // Serves the project root at http://localhost:8000
 // Usage: node serve.js
 
@@ -23,8 +23,16 @@ const MIME_TYPES = {
 };
 
 const server = http.createServer(function (req, res) {
+    // Strip query string (used for cache-busting) before resolving file path
     var urlPath = req.url.split('?')[0];
     var filePath = path.join(ROOT, urlPath);
+
+    // Prevent directory traversal outside ROOT
+    if (!filePath.startsWith(ROOT)) {
+        res.writeHead(403);
+        res.end('Forbidden');
+        return;
+    }
 
     fs.stat(filePath, function (err, stat) {
         if (err || !stat.isFile()) {
@@ -36,12 +44,18 @@ const server = http.createServer(function (req, res) {
         var ext = path.extname(filePath).toLowerCase();
         var contentType = MIME_TYPES[ext] || 'application/octet-stream';
 
-        res.writeHead(200, { 'Content-Type': contentType });
+        // No-cache headers so the browser always fetches fresh files during dev
+        res.writeHead(200, {
+            'Content-Type': contentType,
+            'Cache-Control': 'no-store, no-cache, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0'
+        });
         fs.createReadStream(filePath).pipe(res);
     });
 });
 
 server.listen(PORT, function () {
-    console.log('Serving at http://localhost:' + PORT);
+    console.log('Server running at http://localhost:' + PORT);
     console.log('Open: http://localhost:' + PORT + '/editions/free/src/viewer.html');
 });

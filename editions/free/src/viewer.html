@@ -2,12 +2,56 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xmlns:xlink="http://www.w3.org/1999/xlink">
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta http-equiv="cache-control" content="no-cache">
 <meta charset="utf-8">
 <title>ScratchJr Viewer</title>
 
 <style>
+    /* Hide the ScratchJr loading modal entirely — we don't need it */
+    #backdrop,
+    #modaldialog {
+        display: none !important;
+    }
+    /* Hide the empty user-assets slot — no database in the viewer */
+    .assetbox.off {
+        display: none !important;
+    }
+    #sjr-file-btn {
+        position: fixed;
+        top: 10px;
+        right: 10px;
+        z-index: 9999;
+        background: #4B8CC2;
+        color: #fff;
+        border: none;
+        border-radius: 6px;
+        padding: 8px 14px;
+        font-family: sans-serif;
+        font-size: 13px;
+        cursor: pointer;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+    }
+    #sjr-file-btn:hover {
+        background: #3a7ab0;
+    }
+    #url-loader-error {
+        position: fixed;
+        top: 12px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: #D62222;
+        color: #fff;
+        padding: 10px 20px;
+        border-radius: 6px;
+        font-family: sans-serif;
+        font-size: 14px;
+        z-index: 99999;
+        max-width: 80%;
+        text-align: center;
+        display: none;
+    }
     #url-loader-overlay {
         position: fixed;
         top: 0; left: 0;
@@ -39,53 +83,33 @@
         color: #555;
         font-size: 15px;
     }
-    #url-loader-error {
-        position: fixed;
-        top: 12px;
-        left: 50%;
-        transform: translateX(-50%);
-        background: #D62222;
-        color: #fff;
-        padding: 10px 20px;
-        border-radius: 6px;
-        font-family: sans-serif;
-        font-size: 14px;
-        z-index: 99999;
-        max-width: 80%;
-        text-align: center;
-        display: none;
-    }
 </style>
 
-<!-- Set page type before the bundle loads so it picks the editor entry point -->
 <script>
     window.scratchJrPage = 'editor';
 </script>
-<!-- Tablet shim — must load before app.bundle.js -->
 <script src="../../../web-client/web-adapter.js"></script>
-<!-- ScratchJr compiled bundle -->
-<script src="app.bundle.js"></script>
-<!-- JSZip for .sjr unpacking -->
+<script src="app.bundle.v2.js"></script>
 <script src="../../../web-client/jszip.min.js"></script>
-<!-- URL loader — deferred so it runs after the bundle initialises -->
 <script src="../../../web-client/url-loader.js" defer></script>
 </head>
 
 <body style="background: white; margin: 0;">
 
-<!-- ScratchJr editor DOM — same structure as editor.html -->
 <div class="frame" id="frame"></div>
 <div class="libframe" id="libframe"></div>
 <div class="paintframe" id="paintframe"></div>
 
-<!-- Loading overlay shown while a .sjr file is being fetched/parsed -->
 <div id="url-loader-overlay" class="hidden">
     <div class="url-loader-spinner"></div>
     <div id="url-loader-status">Loading project...</div>
 </div>
 
-<!-- Error banner shown on fetch or parse failure -->
 <div id="url-loader-error"></div>
+
+<!-- Hidden file input for loading .sjr files from disk -->
+<input type="file" id="sjr-file-input" accept=".sjr" style="display:none;">
+<button id="sjr-file-btn" onclick="document.getElementById('sjr-file-input').click()">Open .sjr file</button>
 
 </body>
 </html>

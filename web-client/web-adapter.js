@@ -1,22 +1,14 @@
 // web-adapter.js
 // Replaces the native iOS/Android tablet interface so the ScratchJr bundle
 // can initialise in a plain browser context.
-//
-// Loaded from editions/free/src/viewer.html, so all relative paths in the
-// bundle resolve correctly against editions/free/src/ — no path rewriting needed.
-//
-// Must be loaded synchronously before app.bundle.js so window.tablet is in
-// place when the bundle evaluates and sets isiOS / isAndroid flags.
+// Must be loaded synchronously before app.bundle.js.
 
 (function () {
 
-    // In-memory store for project media assets: md5/filename -> base64 data URL.
-    // Populated by url-loader.js after unzipping a .sjr file.
     window.WebAdapter = {
         assetStore: {}
     };
 
-    // Simple hash used to generate keys when the runtime asks us to store media.
     function simpleHash(str) {
         var hash = 0;
         for (var i = 0; i < str.length; i++) {
@@ -26,15 +18,11 @@
         return Math.abs(hash).toString(16);
     }
 
-    // Returns a JSON string representing a single empty project row.
-    // Project.dataRecieved does JSON.parse(str)[0] then checks row.json.
-    // Returning a row with no json field causes the runtime to create a
-    // blank page — exactly what we want for an empty project.
     function emptyProjectRow() {
         return JSON.stringify([{
             id: 1,
             name: 'Untitled',
-            version: window.Settings ? window.Settings.scratchJrVersion : 'iOSv01',
+            version: (window.Settings && window.Settings.scratchJrVersion) || 'iOSv01',
             deleted: 'NO',
             mtime: Date.now().toString(),
             isgift: '0'
@@ -43,15 +31,11 @@
 
     window.tablet = {
 
-        // --- Settings ---
-        // editor.js calls OS.getsettings(fcn) and splits the result on commas.
-        // list[0] = path prefix, list[1] = '0' means no custom path.
-        // Returning ',0' tells the runtime to use default relative asset paths.
+        // editor.js: OS.path = list[1]=='0' ? list[0]+'/' : undefined
+        // Returning ',1' keeps OS.path = undefined so asset URLs stay relative.
         getsettings: function (fcn) {
-            if (fcn) { fcn(',0'); }
+            if (fcn) { fcn(',1'); }
         },
-
-        // --- Media I/O ---
 
         getmedia: function (md5, fcn) {
             var data = window.WebAdapter.assetStore[md5];
@@ -80,7 +64,6 @@
         },
 
         getfile: function (name, fcn) {
-            // Scroll-state files — return btoa('0') so the runtime gets a valid value.
             if (fcn) { fcn(btoa('0')); }
         },
 
@@ -91,11 +74,6 @@
         cleanassets: function (ft, fcn) {
             if (fcn) { fcn(); }
         },
-
-        // --- Database ---
-        // The viewer is read-only. Project queries return a single empty project
-        // row so the runtime creates a blank stage instead of crashing on
-        // JSON.parse('[]')[0] being undefined.
 
         query: function (json, fcn) {
             if (!fcn) { return; }
@@ -111,8 +89,6 @@
             if (fcn) { fcn(); }
         },
 
-        // --- Sound ---
-
         registerSound:   function (dir, name, fcn) { if (fcn) { fcn(); } },
         playSound:       function (name, fcn)       { if (fcn) { fcn(); } },
         stopSound:       function (name, fcn)       { if (fcn) { fcn(); } },
@@ -124,8 +100,6 @@
         recorddisappear: function (b, fcn)          { if (fcn) { fcn(); } },
         askpermission:   function () {},
 
-        // --- Camera ---
-
         hascamera:    function ()          { return false; },
         startfeed:    function (data, fcn) { if (fcn) { fcn(); } },
         stopfeed:     function (fcn)       { if (fcn) { fcn(); } },
@@ -133,29 +107,53 @@
         captureimage: function (fcn)       { if (fcn) { fcn(); } },
         hidesplash:   function (fcn)       { if (fcn) { fcn(); } },
 
-        // --- Sharing ---
-
         createZipForProject:   function (data, meta, name, fcn) { if (fcn) { fcn(name); } },
         sendSjrToShareDialog:  function () {},
         registerLibraryAssets: function (v, assets, fcn) { if (fcn) { fcn(); } },
         duplicateAsset:        function (path, name, fcn) { if (fcn) { fcn(); } },
         deviceName:            function (fcn) { if (fcn) { fcn('Web Viewer'); } },
 
-        // --- Analytics ---
-
         analyticsEvent:        function () {},
         setAnalyticsPlacePref: function () {},
         setAnalyticsPref:      function () {},
 
-        // postMessage is called by the iOS class inside the bundle whenever it
-        // needs to talk to the native layer. We immediately resolve the pending
-        // promise so the async chains in iOS.js complete without hanging.
         postMessage: function (msg) {
-            if (window.iOS && window.iOS.resolve) {
-                setTimeout(function () {
-                    window.iOS.resolve(msg.id, '');
-                }, 0);
+            if (!window.iOS || !window.iOS.resolve) { return; }
+            var method = msg.method || '';
+            var result = '';
+
+            if (method === 'database_query') {
+                // Parse the JSON statement to decide what to return.
+                try {
+                    var q = JSON.parse(msg.params[0]);
+                    var stmt = q.stmt || '';
+                    if (stmt.indexOf('from projects') !== -1) {
+                        result = emptyProjectRow();
+                    } else {
+                        // All other queries (usershapes, userbkgs, etc.) return empty array.
+                        result = '[]';
+                    }
+                } catch (e) {
+                    result = '[]';
+                }
+            } else if (method === 'database_stmt') {
+                result = '';
+            } else if (method === 'io_getsettings') {
+                result = ',1';
+            } else if (method === 'io_getfile') {
+                result = btoa('0');
+            } else if (method === 'io_getmd5') {
+                var s = (msg.params && msg.params[0]) ? String(msg.params[0]) : '';
+                result = simpleHash(s);
+            } else if (method === 'io_getmedialen') {
+                result = 0;
+            } else if (method === 'scratchjr_cameracheck') {
+                result = false;
             }
+
+            setTimeout(function () {
+                window.iOS.resolve(msg.id, result);
+            }, 0);
         }
     };
 
