@@ -43,5 +43,5 @@ const server = http.createServer(function (req, res) {
 
 server.listen(PORT, function () {
     console.log('Serving at http://localhost:' + PORT);
-    console.log('Open: http://localhost:' + PORT + '/web-client/index.html');
+    console.log('Open: http://localhost:' + PORT + '/editions/free/src/viewer.html');
 });

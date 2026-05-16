@@ -2,86 +2,60 @@
 // Replaces the native iOS/Android tablet interface so the ScratchJr bundle
 // can initialise in a plain browser context.
 //
-// Must be loaded synchronously before app.bundle.js.
-// The bundle checks `typeof AndroidInterface` to decide whether it is running
-// on iOS or Android. Because AndroidInterface is never defined here, the bundle
-// treats the environment as iOS and delegates all tablet calls to window.tablet,
-// which this file provides.
+// Loaded from editions/free/src/viewer.html, so all relative paths in the
+// bundle resolve correctly against editions/free/src/ — no path rewriting needed.
 //
-// CSS path patching:
-// The bundle calls preprocessAndLoadCss('css', 'css/font.css') which issues a
-// synchronous XHR to 'css/font.css' relative to the page URL. When index.html
-// is served from web-client/, that resolves to web-client/css/ which does not
-// exist. We patch XMLHttpRequest.open to rewrite those relative CSS/JSON paths
-// to the correct location under editions/free/src/.
+// Must be loaded synchronously before app.bundle.js so window.tablet is in
+// place when the bundle evaluates and sets isiOS / isAndroid flags.
 
 (function () {
-    var ASSET_BASE = '../editions/free/src/';
 
-    // Intercept synchronous XHR calls made by preprocessAndLoad and loadSettings
-    // so that relative paths like 'css/font.css' or 'settings.json' are rewritten
-    // to point at the actual asset location.
-    var _open = XMLHttpRequest.prototype.open;
-    XMLHttpRequest.prototype.open = function (method, url, async) {
-        var rewritten = url;
-        // Rewrite bare relative paths that the bundle uses for CSS and JSON assets.
-        // These are paths like 'css/font.css', 'localizations/en.json', 'media.json'
-        // that the bundle fetches relative to the page URL.
-        if (typeof url === 'string' && !url.match(/^(https?:|\/|\.\.\/)/)) {
-            rewritten = ASSET_BASE + url;
-        }
-        return _open.call(this, method, rewritten, async === undefined ? true : async);
-    };
-
-    // In-memory store for media assets (md5/filename -> base64 data URL).
+    // In-memory store for project media assets: md5/filename -> base64 data URL.
     // Populated by url-loader.js after unzipping a .sjr file.
     window.WebAdapter = {
         assetStore: {}
     };
 
-    // Simple non-cryptographic hash used to generate stable md5-like keys
-    // for assets that the runtime asks us to store.
+    // Simple hash used to generate keys when the runtime asks us to store media.
     function simpleHash(str) {
         var hash = 0;
         for (var i = 0; i < str.length; i++) {
-            var ch = str.charCodeAt(i);
-            hash = ((hash << 5) - hash) + ch;
+            hash = ((hash << 5) - hash) + str.charCodeAt(i);
             hash = hash & hash;
         }
         return Math.abs(hash).toString(16);
     }
 
-    // Return the comma-separated string the editor entry point expects: "<path>,0"
-    // src/entry/editor.js splits on commas: list[0] is the OS path, list[1] is
-    // a flag. An empty list[0] tells the runtime to use relative asset paths.
-    // The bundle's own loadSettings() call (in app.js) will fetch settings.json
-    // via the XHR interceptor above, so window.Settings is populated before
-    // editorMain() runs. This stub just satisfies the OS.getsettings() call
-    // that editor.js makes before calling ScratchJr.appinit().
-    function fetchSettings(fcn) {
-        if (fcn) { fcn(',0'); }
+    // Returns a JSON string representing a single empty project row.
+    // Project.dataRecieved does JSON.parse(str)[0] then checks row.json.
+    // Returning a row with no json field causes the runtime to create a
+    // blank page — exactly what we want for an empty project.
+    function emptyProjectRow() {
+        return JSON.stringify([{
+            id: 1,
+            name: 'Untitled',
+            version: window.Settings ? window.Settings.scratchJrVersion : 'iOSv01',
+            deleted: 'NO',
+            mtime: Date.now().toString(),
+            isgift: '0'
+        }]);
     }
 
-    // The tablet object that the bundle calls into.
     window.tablet = {
 
         // --- Settings ---
-
+        // editor.js calls OS.getsettings(fcn) and splits the result on commas.
+        // list[0] = path prefix, list[1] = '0' means no custom path.
+        // Returning ',0' tells the runtime to use default relative asset paths.
         getsettings: function (fcn) {
-            fetchSettings(fcn);
+            if (fcn) { fcn(',0'); }
         },
 
         // --- Media I/O ---
 
         getmedia: function (md5, fcn) {
             var data = window.WebAdapter.assetStore[md5];
-            if (data) {
-                if (fcn) { fcn(data); }
-            } else {
-                // Asset not in store — return empty string so the runtime
-                // does not hang waiting for a callback.
-                if (fcn) { fcn(''); }
-            }
+            if (fcn) { fcn(data || ''); }
         },
 
         setmedia: function (str, ext, fcn) {
@@ -97,8 +71,7 @@
         },
 
         getmd5: function (str, fcn) {
-            var hash = simpleHash(str);
-            if (fcn) { fcn(hash); }
+            if (fcn) { fcn(simpleHash(str)); }
         },
 
         remove: function (str, fcn) {
@@ -107,8 +80,7 @@
         },
 
         getfile: function (name, fcn) {
-            // Scroll-state files are stored as btoa-encoded numbers.
-            // Return btoa("0") so the runtime gets a valid value.
+            // Scroll-state files — return btoa('0') so the runtime gets a valid value.
             if (fcn) { fcn(btoa('0')); }
         },
 
@@ -120,12 +92,19 @@
             if (fcn) { fcn(); }
         },
 
-        // --- Database (SQLite) ---
-        // The viewer is read-only. All queries return empty result sets and
-        // all write statements are no-ops.
+        // --- Database ---
+        // The viewer is read-only. Project queries return a single empty project
+        // row so the runtime creates a blank stage instead of crashing on
+        // JSON.parse('[]')[0] being undefined.
 
         query: function (json, fcn) {
-            if (fcn) { fcn('[]'); }
+            if (!fcn) { return; }
+            var stmt = (json && json.stmt) ? json.stmt : '';
+            if (stmt.indexOf('from projects') !== -1) {
+                fcn(emptyProjectRow());
+            } else {
+                fcn('[]');
+            }
         },
 
         stmt: function (json, fcn) {
@@ -134,103 +113,44 @@
 
         // --- Sound ---
 
-        registerSound: function (dir, name, fcn) {
-            if (fcn) { fcn(); }
-        },
-
-        playSound: function (name, fcn) {
-            if (fcn) { fcn(); }
-        },
-
-        stopSound: function (name, fcn) {
-            if (fcn) { fcn(); }
-        },
-
-        sndrecord: function (fcn) {
-            if (fcn) { fcn(); }
-        },
-
-        recordstop: function (fcn) {
-            if (fcn) { fcn(); }
-        },
-
-        volume: function (fcn) {
-            if (fcn) { fcn(0); }
-        },
-
-        startplay: function (fcn) {
-            if (fcn) { fcn(); }
-        },
-
-        stopplay: function (fcn) {
-            if (fcn) { fcn(); }
-        },
-
-        recorddisappear: function (b, fcn) {
-            if (fcn) { fcn(); }
-        },
-
-        askpermission: function () {},
+        registerSound:   function (dir, name, fcn) { if (fcn) { fcn(); } },
+        playSound:       function (name, fcn)       { if (fcn) { fcn(); } },
+        stopSound:       function (name, fcn)       { if (fcn) { fcn(); } },
+        sndrecord:       function (fcn)             { if (fcn) { fcn(); } },
+        recordstop:      function (fcn)             { if (fcn) { fcn(); } },
+        volume:          function (fcn)             { if (fcn) { fcn(0); } },
+        startplay:       function (fcn)             { if (fcn) { fcn(); } },
+        stopplay:        function (fcn)             { if (fcn) { fcn(); } },
+        recorddisappear: function (b, fcn)          { if (fcn) { fcn(); } },
+        askpermission:   function () {},
 
         // --- Camera ---
 
-        hascamera: function () {
-            return false;
-        },
-
-        startfeed: function (data, fcn) {
-            if (fcn) { fcn(); }
-        },
-
-        stopfeed: function (fcn) {
-            if (fcn) { fcn(); }
-        },
-
-        choosecamera: function (mode, fcn) {
-            if (fcn) { fcn(); }
-        },
-
-        captureimage: function (fcn) {
-            if (fcn) { fcn(); }
-        },
-
-        hidesplash: function (fcn) {
-            if (fcn) { fcn(); }
-        },
+        hascamera:    function ()          { return false; },
+        startfeed:    function (data, fcn) { if (fcn) { fcn(); } },
+        stopfeed:     function (fcn)       { if (fcn) { fcn(); } },
+        choosecamera: function (mode, fcn) { if (fcn) { fcn(); } },
+        captureimage: function (fcn)       { if (fcn) { fcn(); } },
+        hidesplash:   function (fcn)       { if (fcn) { fcn(); } },
 
         // --- Sharing ---
 
-        createZipForProject: function (projectData, metadata, name, fcn) {
-            if (fcn) { fcn(name); }
-        },
-
-        sendSjrToShareDialog: function () {},
-
-        registerLibraryAssets: function (version, assets, fcn) {
-            if (fcn) { fcn(); }
-        },
-
-        duplicateAsset: function (path, name, fcn) {
-            if (fcn) { fcn(); }
-        },
-
-        deviceName: function (fcn) {
-            if (fcn) { fcn('Web Viewer'); }
-        },
+        createZipForProject:   function (data, meta, name, fcn) { if (fcn) { fcn(name); } },
+        sendSjrToShareDialog:  function () {},
+        registerLibraryAssets: function (v, assets, fcn) { if (fcn) { fcn(); } },
+        duplicateAsset:        function (path, name, fcn) { if (fcn) { fcn(); } },
+        deviceName:            function (fcn) { if (fcn) { fcn('Web Viewer'); } },
 
         // --- Analytics ---
 
-        analyticsEvent: function () {},
+        analyticsEvent:        function () {},
         setAnalyticsPlacePref: function () {},
-        setAnalyticsPref: function () {},
+        setAnalyticsPref:      function () {},
 
-        // postMessage is called by the iOS class in the bundle when it wants
-        // to communicate with the native layer. We intercept it here and
-        // immediately resolve the pending callback with an empty result so
-        // the async chains in iOS.js do not hang.
+        // postMessage is called by the iOS class inside the bundle whenever it
+        // needs to talk to the native layer. We immediately resolve the pending
+        // promise so the async chains in iOS.js complete without hanging.
         postMessage: function (msg) {
-            // The iOS class stores callbacks keyed by msg.id and resolves
-            // them via window.iOS.resolve(id, result). We call that here.
             if (window.iOS && window.iOS.resolve) {
                 setTimeout(function () {
                     window.iOS.resolve(msg.id, '');
@@ -238,4 +158,5 @@
             }
         }
     };
+
 })();
