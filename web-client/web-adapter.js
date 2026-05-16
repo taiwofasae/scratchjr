@@ -7,8 +7,32 @@
 // on iOS or Android. Because AndroidInterface is never defined here, the bundle
 // treats the environment as iOS and delegates all tablet calls to window.tablet,
 // which this file provides.
+//
+// CSS path patching:
+// The bundle calls preprocessAndLoadCss('css', 'css/font.css') which issues a
+// synchronous XHR to 'css/font.css' relative to the page URL. When index.html
+// is served from web-client/, that resolves to web-client/css/ which does not
+// exist. We patch XMLHttpRequest.open to rewrite those relative CSS/JSON paths
+// to the correct location under editions/free/src/.
 
 (function () {
+    var ASSET_BASE = '../editions/free/src/';
+
+    // Intercept synchronous XHR calls made by preprocessAndLoad and loadSettings
+    // so that relative paths like 'css/font.css' or 'settings.json' are rewritten
+    // to point at the actual asset location.
+    var _open = XMLHttpRequest.prototype.open;
+    XMLHttpRequest.prototype.open = function (method, url, async) {
+        var rewritten = url;
+        // Rewrite bare relative paths that the bundle uses for CSS and JSON assets.
+        // These are paths like 'css/font.css', 'localizations/en.json', 'media.json'
+        // that the bundle fetches relative to the page URL.
+        if (typeof url === 'string' && !url.match(/^(https?:|\/|\.\.\/)/)) {
+            rewritten = ASSET_BASE + url;
+        }
+        return _open.call(this, method, rewritten, async === undefined ? true : async);
+    };
+
     // In-memory store for media assets (md5/filename -> base64 data URL).
     // Populated by url-loader.js after unzipping a .sjr file.
     window.WebAdapter = {
@@ -27,31 +51,14 @@
         return Math.abs(hash).toString(16);
     }
 
-    // Fetch settings.json synchronously and return the comma-separated string
-    // the editor entry point expects: "<path>,0"
-    // The editor entry point (src/entry/editor.js) calls OS.getsettings(fcn)
-    // and then splits the result on commas: list[0] is the path, list[1] is
-    // a flag for whether a custom path is set.
+    // Return the comma-separated string the editor entry point expects: "<path>,0"
+    // src/entry/editor.js splits on commas: list[0] is the OS path, list[1] is
+    // a flag. An empty list[0] tells the runtime to use relative asset paths.
+    // The bundle's own loadSettings() call (in app.js) will fetch settings.json
+    // via the XHR interceptor above, so window.Settings is populated before
+    // editorMain() runs. This stub just satisfies the OS.getsettings() call
+    // that editor.js makes before calling ScratchJr.appinit().
     function fetchSettings(fcn) {
-        var xhr = new XMLHttpRequest();
-        xhr.open('GET', 'settings.json', false); // synchronous — fine for a local file
-        try {
-            xhr.send(null);
-        } catch (e) {
-            // If the synchronous request fails, fall back to an empty path.
-            if (fcn) { fcn(',0'); }
-            return;
-        }
-        if (xhr.status === 200 || xhr.status === 0) {
-            try {
-                var settings = JSON.parse(xhr.responseText);
-                window.Settings = settings;
-            } catch (e) {
-                console.warn('web-adapter: could not parse settings.json', e);
-            }
-        }
-        // The editor entry point only uses list[0] (path) and list[1] (flag).
-        // Passing an empty path tells the runtime to use relative asset paths.
         if (fcn) { fcn(',0'); }
     }
 

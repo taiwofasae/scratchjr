@@ -30,7 +30,7 @@ Three sequential phases build on each other: first get the ScratchJr UI renderin
     - Use fast-check (or equivalent) to generate arbitrary inputs and verify the call count.
     - **Validates: Requirements 1.3**
 
-  - [-] 1.4 Create `web-client/index.html` — viewer page skeleton
+  - [x] 1.4 Create `web-client/index.html` — viewer page skeleton
     - Mirror the DOM structure of `editions/free/src/editor.html`: include `#frame`, `#libframe`, `#paintframe` divs.
     - Set `window.scratchJrPage = 'editor'` in an inline `<script>` before any other script.
     - Load `web-adapter.js` synchronously (no `defer`, no `async`) so stubs are in place before the bundle runs.
@@ -41,17 +41,17 @@ Three sequential phases build on each other: first get the ScratchJr UI renderin
     - Add a hidden error banner `#url-loader-error`.
     - _Requirements: 1.1, 1.2, 1.5, 6.1, 6.2, 6.3_
 
-  - [ ] 1.5 Vendor JSZip: download `jszip.min.js` (v3.10.x) into `web-client/`
+  - [x] 1.5 Vendor JSZip: download `jszip.min.js` (v3.10.x) into `web-client/`
     - Download from the official JSZip CDN/release and save as `web-client/jszip.min.js`.
     - Add a `<script src="jszip.min.js">` tag in `index.html` before `url-loader.js`.
     - _Requirements: 6.1_
 
-  - [ ] 1.6 Create `web-client/url-loader.js` — stub (no-op for Phase 1)
+  - [x] 1.6 Create `web-client/url-loader.js` — stub (no-op for Phase 1)
     - Create the file with an empty entry function `initUrlLoader()` that returns immediately.
     - This ensures the `defer`-loaded script exists and the page loads without errors.
     - _Requirements: 2.4_
 
-  - [ ] 1.7 Checkpoint — verify Phase 1 manually
+  - [-] 1.7 Checkpoint — verify Phase 1 manually
     - Serve `web-client/` from `localhost:8000` (e.g. `python3 -m http.server 8000`).
     - Open `http://localhost:8000/web-client/index.html` in a browser.
     - Confirm the ScratchJr editor UI renders (stage, sprite area, block palette visible) with an empty project.
