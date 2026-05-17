@@ -77,6 +77,15 @@ function handleProxy(req, res) {
 
 function handleStatic(req, res) {
     var urlPath = req.url.split('?')[0];
+
+    // Redirect root to the viewer, preserving any query string
+    if (urlPath === '/' || urlPath === '') {
+        var qs = req.url.indexOf('?') !== -1 ? req.url.slice(req.url.indexOf('?')) : '';
+        res.writeHead(302, { 'Location': '/editions/free/src/viewer.html' + qs });
+        res.end();
+        return;
+    }
+
     var filePath = path.join(ROOT, urlPath);
 
     if (!filePath.startsWith(ROOT)) {
@@ -117,5 +126,6 @@ const server = http.createServer(function (req, res) {
 server.listen(PORT, function () {
     console.log('Server running at http://localhost:' + PORT);
     console.log('Viewer: http://localhost:' + PORT + '/editions/free/src/viewer.html');
-    console.log('URL loading: http://localhost:' + PORT + '/editions/free/src/viewer.html?file_url=https://public.fasae.dev/stem-club/scratchjr/Classroom.sjr');
+    console.log('Short URL: http://localhost:' + PORT + '/');
+    console.log('URL loading: http://localhost:' + PORT + '/?file_url=https://public.fasae.dev/stem-club/scratchjr/Classroom.sjr');
 });
