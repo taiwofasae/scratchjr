@@ -24,6 +24,46 @@
         }]);
     }
 
+    // Web Audio context for playing sounds
+    var audioContext = null;
+    var audioBuffers = {};
+
+    function getAudioContext() {
+        if (!audioContext) {
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        return audioContext;
+    }
+
+    function loadAudioBuffer(url, name, fcn) {
+        var ctx = getAudioContext();
+        fetch(url)
+            .then(function (r) { return r.arrayBuffer(); })
+            .then(function (buf) { return ctx.decodeAudioData(buf); })
+            .then(function (decoded) {
+                audioBuffers[name] = decoded;
+                if (fcn) { fcn(name); }
+            })
+            .catch(function () {
+                if (fcn) { fcn('error'); }
+            });
+    }
+
+    function playAudioBuffer(name) {
+        var buffer = audioBuffers[name];
+        if (!buffer) { return; }
+        var ctx = getAudioContext();
+        var source = ctx.createBufferSource();
+        source.buffer = buffer;
+        source.connect(ctx.destination);
+        source.start(0);
+        source.onended = function () {
+            if (window.ScratchAudio) {
+                window.ScratchAudio.soundDone(name);
+            }
+        };
+    }
+
     window.tablet = {
 
         // Returning ',1' keeps OS.path undefined so the runtime uses relative asset paths
@@ -136,6 +176,40 @@
                 result = 0;
             } else if (method === 'scratchjr_cameracheck') {
                 result = false;
+            } else if (method === 'io_registersound') {
+                // params: [dir, name]
+                var dir = (msg.params && msg.params[0]) ? msg.params[0] : '';
+                var sndName = (msg.params && msg.params[1]) ? msg.params[1] : '';
+
+                // Check if the sound is in the asset store (from a loaded .sjr)
+                var assetData = window.WebAdapter.assetStore[sndName];
+                if (assetData) {
+                    var base64 = assetData.split(',')[1];
+                    var binary = atob(base64);
+                    var bytes = new Uint8Array(binary.length);
+                    for (var i = 0; i < binary.length; i++) { bytes[i] = binary.charCodeAt(i); }
+                    var ctx = getAudioContext();
+                    ctx.decodeAudioData(bytes.buffer, function (decoded) {
+                        audioBuffers[sndName] = decoded;
+                        window.iOS.resolve(msg.id, sndName + ',0');
+                    }, function () {
+                        window.iOS.resolve(msg.id, 'error');
+                    });
+                    return;
+                } else {
+                    // UI sound — ScratchAudio requests 'HTML5/sounds/cut.wav' but
+                    // the files live at 'sounds/cut.wav' relative to viewer.html
+                    var fetchUrl = dir.replace('HTML5/', '') + sndName;
+                    loadAudioBuffer(fetchUrl, sndName, function (name) {
+                        window.iOS.resolve(msg.id, name === 'error' ? 'error' : sndName + ',0');
+                    });
+                    return;
+                }
+            } else if (method === 'io_playsound') {
+                var playName = (msg.params && msg.params[0]) ? msg.params[0] : '';
+                playAudioBuffer(playName);
+            } else if (method === 'io_stopsound') {
+                // No-op — Web Audio sources can't be stopped by name easily
             }
 
             setTimeout(function () {
