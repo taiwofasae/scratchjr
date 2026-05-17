@@ -30780,7 +30780,7 @@ var UI = function () {
     return UI;
 }();
 
-exports.default = UI;
+exports.default = UI; window.UI = UI;
 
 /***/ }),
 

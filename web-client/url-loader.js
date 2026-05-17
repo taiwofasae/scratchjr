@@ -104,7 +104,30 @@
                 if (!projectJson.pages) {
                     throw new Error('Project data is missing pages.');
                 }
+
+                // Set metadata so the runtime knows the project name etc.
+                if (window.Project.metadata !== undefined) {
+                    window.Project.metadata = {
+                        name: projectData.name || 'Untitled',
+                        version: projectData.version || (window.Settings && window.Settings.scratchJrVersion) || 'iOSv01',
+                        deleted: 'NO',
+                        isgift: '0',
+                        mtime: Date.now().toString()
+                    };
+                }
+
+                // Clear the current stage and sprite panel before loading new project
+                window.Project.clear();
+
                 window.Project.loadData(projectJson, function () {
+                    // Refresh the sprite panel and page thumbnails
+                    if (window.ScratchJr && window.ScratchJr.stage && window.ScratchJr.stage.currentPage) {
+                        window.ScratchJr.stage.currentPage.update();
+                        window.ScratchJr.changed = false;
+                    }
+                    if (window.UI) {
+                        window.UI.needsScroll();
+                    }
                     hideOverlay();
                     resolve();
                 });

@@ -48,6 +48,11 @@ const patches = [
         name: 'expose window.MediaLib',
         from: 'exports.default = MediaLib;',
         to:   'exports.default = MediaLib; window.MediaLib = MediaLib;'
+    },
+    {
+        name: 'expose window.UI',
+        from: 'exports.default = UI;',
+        to:   'exports.default = UI; window.UI = UI;'
     }
 ];
 
