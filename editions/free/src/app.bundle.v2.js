@@ -17714,20 +17714,20 @@ var ScratchJr = function () {
         value: function getGotoLink() {
             if (editmode == 'storyStarter') {
                 if (!storyStarted) {
-                    return 'home.html?place=help';
+                    return 'viewer.html?place=help';
                 } else {
-                    return 'home.html?place=home';
+                    return 'viewer.html?place=home';
                 }
             }
 
             if (!currentProject) {
-                return 'home.html?place=home';
+                return 'viewer.html?place=home';
             }
 
             if (_Project2.default.metadata.gallery == 'samples') {
-                return 'home.html?place=help';
+                return 'viewer.html?place=help';
             } else {
-                return 'home.html?place=home&timestamp=' + new Date().getTime();
+                return 'viewer.html?place=home&timestamp=' + new Date().getTime();
             }
         }
     }, {
@@ -31560,7 +31560,7 @@ function gettingStartedMain() {
 }
 
 function gettingStartedCloseMe() {
-    window.location.href = 'home.html?place=' + place;
+    window.location.href = 'viewer.html?place=' + place;
 }
 
 /***/ }),
@@ -31608,7 +31608,7 @@ function homeMain() {
 }
 
 function homeGoBack() {
-    window.location.href = 'index.html?back=yes';
+    window.location.href = 'viewer.html?back=yes';
 }
 
 function homeStrings() {
@@ -32116,7 +32116,7 @@ function indexGohome() {
         doNext();
     });
     function doNext() {
-        window.location.href = 'home.html';
+        window.location.href = 'viewer.html';
     }
 }
 
@@ -32124,18 +32124,18 @@ function indexGoSettings() {
     // Switch to the settings selection page
     // Triggered by tapping the gear icon in the top right
     _ScratchAudio2.default.sndFX('tap.wav');
-    window.location.href = 'home.html?place=gear';
+    window.location.href = 'viewer.html?place=gear';
 }
 
 function indexGettingstarted() {
     _ScratchAudio2.default.sndFX('tap.wav');
-    window.location.href = 'gettingstarted.html?place=home';
+    window.location.href = 'viewer.html?place=home';
 }
 
 // For PBS KIDS edition only
 function indexInfo() {
     _ScratchAudio2.default.sndFX('tap.wav');
-    window.location.href = 'home.html?place=book';
+    window.location.href = 'viewer.html?place=book';
 }
 
 function indexMoreApps() {
@@ -32824,7 +32824,7 @@ var Home = function () {
             }
             function doNext() {
                 _OS2.default.analyticsEvent('lobby', 'existing_project_edited');
-                window.location.href = 'editor.html?pmd5=' + md5 + '&mode=edit';
+                window.location.href = 'viewer.html?pmd5=' + md5 + '&mode=edit';
             }
         }
     }, {
@@ -32845,7 +32845,7 @@ var Home = function () {
                 doNext(md5);
             });
             function doNext(md5) {
-                window.location.href = 'editor.html?pmd5=' + md5 + '&mode=edit';
+                window.location.href = 'viewer.html?pmd5=' + md5 + '&mode=edit';
             }
         }
 
@@ -33411,7 +33411,7 @@ var Lobby = function () {
         key: 'goHome',
         value: function goHome() {
             if (currentPage === 'home') {
-                window.location.href = 'index.html?back=true';
+                window.location.href = 'viewer.html?back=true';
             } else {
                 Lobby.setPage('home');
             }
@@ -33532,7 +33532,7 @@ var Samples = function () {
             e.preventDefault();
             e.stopPropagation();
             _ScratchAudio2.default.sndFX('tap.wav');
-            window.location.href = 'gettingstarted.html?place=help';
+            window.location.href = 'viewer.html?place=help';
         }
 
         ////////////////////////////
@@ -33578,7 +33578,7 @@ var Samples = function () {
             _ScratchAudio2.default.sndFX('tap.wav');
             _OS2.default.analyticsEvent('samples', 'sample_opened', mt.textContent);
             var md5 = mt.md5;
-            window.location.href = 'editor.html?pmd5=' + md5 + '&mode=' + (window.Settings.useStoryStarters ? 'storyStarter' : 'look');
+            window.location.href = 'viewer.html?pmd5=' + md5 + '&mode=' + (window.Settings.useStoryStarters ? 'storyStarter' : 'look');
         }
     }, {
         key: 'insertThumbnail',
@@ -43037,7 +43037,7 @@ var Android = function () {
         //
         // static pageError (desc) {
         //     console.log('XCODE ERROR:', desc); // eslint-disable-line no-console
-        //     if (window.location.href.indexOf('home.html') > -1) {
+        //     if (window.location.href.indexOf('viewer.html') > -1) {
         //         if (Lobby.errorTimer) {
         //             Lobby.errorLoading(desc);
         //         }
@@ -44100,7 +44100,7 @@ var OS = function () {
         key: 'pageError',
         value: function pageError(desc) {
             console.log('XCODE ERROR:', desc); // eslint-disable-line no-console
-            if (window.location.href.indexOf('home.html') > -1) {
+            if (window.location.href.indexOf('viewer.html') > -1) {
                 if (_Lobby2.default.errorTimer) {
                     _Lobby2.default.errorLoading(desc);
                 }

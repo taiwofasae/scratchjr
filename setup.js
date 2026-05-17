@@ -64,6 +64,16 @@ patches.forEach(function (patch) {
     log('Applied: ' + patch.name);
 });
 
+// Redirect all internal navigation back to viewer.html instead of the
+// native app pages (home.html, editor.html, index.html, gettingstarted.html)
+content = content
+    .replace(/home\.html/g, 'viewer.html')
+    .replace(/'editor\.html/g, "'viewer.html")
+    .replace(/"editor\.html/g, '"viewer.html')
+    .replace(/index\.html\?back/g, 'viewer.html?back')
+    .replace(/gettingstarted\.html/g, 'viewer.html');
+log('Applied: navigation redirect to viewer.html');
+
 fs.writeFileSync(BUNDLE_DEST, content, 'utf8');
 
 log('Done. Run "npm start" then open:');
