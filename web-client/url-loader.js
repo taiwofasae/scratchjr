@@ -159,15 +159,22 @@
             var flip = document.getElementById('flip');
             if (!flip || document.getElementById('sjr-open-btn')) { return; }
 
+            var flipRect = flip.getBoundingClientRect();
+            if (flipRect.width === 0) { return; }
+
             var btn = document.createElement('div');
             btn.id = 'sjr-open-btn';
-            btn.title = 'Open .sjr file';
+
+            var btnHeight = Math.round(flipRect.height * 0.7);
+            var btnTop = Math.round(flipRect.top + (flipRect.height - btnHeight) / 2);
+            var btnLeft = Math.round(flipRect.right) + 8;
+
             btn.style.cssText = [
-                'position: absolute',
-                'top: ' + flip.style.top,
-                'left: ' + (flip.offsetLeft + flip.offsetWidth + 6) + 'px',
-                'height: ' + flip.offsetHeight + 'px',
-                'padding: 0 10px',
+                'position: fixed',
+                'top: ' + btnTop + 'px',
+                'left: ' + btnLeft + 'px',
+                'height: ' + btnHeight + 'px',
+                'padding: 0 12px',
                 'background: #4B8CC2',
                 'color: #fff',
                 'border-radius: 6px',
@@ -178,9 +185,9 @@
                 'display: flex',
                 'align-items: center',
                 'justify-content: center',
-                'z-index: 1000',
+                'z-index: 9000',
                 'white-space: nowrap',
-                'box-shadow: 0 2px 4px rgba(0,0,0,0.2)'
+                'box-shadow: 0 2px 4px rgba(0,0,0,0.25)'
             ].join(';');
             btn.textContent = 'Open .sjr';
 
@@ -189,12 +196,13 @@
                 input.click();
             });
 
-            flip.parentNode.appendChild(btn);
+            document.body.appendChild(btn);
             observer.disconnect();
         }
 
         var observer = new MutationObserver(tryInject);
         observer.observe(document.body, { childList: true, subtree: true });
+        setTimeout(tryInject, 500);
         tryInject();
     }
 
