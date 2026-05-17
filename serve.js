@@ -125,7 +125,7 @@ const server = http.createServer(function (req, res) {
 
 server.listen(PORT, function () {
     console.log('Server running at http://localhost:' + PORT);
-    console.log('Viewer: http://localhost:' + PORT + '/editions/free/src/viewer.html');
-    console.log('Short URL: http://localhost:' + PORT + '/');
+    // console.log('Viewer: http://localhost:' + PORT + '/editions/free/src/viewer.html');
+    console.log('Landing URL: http://localhost:' + PORT + '/');
     console.log('URL loading: http://localhost:' + PORT + '/?file_url=https://public.fasae.dev/stem-club/scratchjr/Classroom.sjr');
 });
