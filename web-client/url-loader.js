@@ -148,6 +148,56 @@
         });
     }
 
+    // Injects the Open button next to the home/back button (#flip) in the
+    // ScratchJr toolbar. Uses MutationObserver because the runtime builds
+    // the toolbar asynchronously after page load.
+    function injectOpenButton() {
+        var input = document.getElementById('sjr-file-input');
+        if (!input) { return; }
+
+        function tryInject() {
+            var flip = document.getElementById('flip');
+            if (!flip || document.getElementById('sjr-open-btn')) { return; }
+
+            var btn = document.createElement('div');
+            btn.id = 'sjr-open-btn';
+            btn.title = 'Open .sjr file';
+            btn.style.cssText = [
+                'position: absolute',
+                'top: ' + flip.style.top,
+                'left: ' + (flip.offsetLeft + flip.offsetWidth + 6) + 'px',
+                'height: ' + flip.offsetHeight + 'px',
+                'padding: 0 10px',
+                'background: #4B8CC2',
+                'color: #fff',
+                'border-radius: 6px',
+                'font-family: sans-serif',
+                'font-size: 13px',
+                'font-weight: bold',
+                'cursor: pointer',
+                'display: flex',
+                'align-items: center',
+                'justify-content: center',
+                'z-index: 1000',
+                'white-space: nowrap',
+                'box-shadow: 0 2px 4px rgba(0,0,0,0.2)'
+            ].join(';');
+            btn.textContent = 'Open .sjr';
+
+            btn.addEventListener('mousedown', function (e) {
+                e.stopPropagation();
+                input.click();
+            });
+
+            flip.parentNode.appendChild(btn);
+            observer.disconnect();
+        }
+
+        var observer = new MutationObserver(tryInject);
+        observer.observe(document.body, { childList: true, subtree: true });
+        tryInject();
+    }
+
     // On a cloud server the fetch goes through /proxy to avoid CORS issues.
     // On localhost the test host allows direct requests.
     function resolveFileUrl(fileUrl) {
@@ -189,6 +239,7 @@
     }
 
     setupFileInput();
+    injectOpenButton();
     readFileUrlParam();
 
 })();
