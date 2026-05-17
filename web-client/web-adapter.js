@@ -1,8 +1,3 @@
-// web-adapter.js
-// Replaces the native iOS/Android tablet interface so the ScratchJr bundle
-// can initialise in a plain browser context.
-// Must be loaded synchronously before app.bundle.js.
-
 (function () {
 
     window.WebAdapter = {
@@ -31,8 +26,7 @@
 
     window.tablet = {
 
-        // editor.js: OS.path = list[1]=='0' ? list[0]+'/' : undefined
-        // Returning ',1' keeps OS.path = undefined so asset URLs stay relative.
+        // Returning ',1' keeps OS.path undefined so the runtime uses relative asset paths
         getsettings: function (fcn) {
             if (fcn) { fcn(',1'); }
         },
@@ -119,25 +113,18 @@
 
         postMessage: function (msg) {
             if (!window.iOS || !window.iOS.resolve) { return; }
+
             var method = msg.method || '';
             var result = '';
 
             if (method === 'database_query') {
-                // Parse the JSON statement to decide what to return.
                 try {
                     var q = JSON.parse(msg.params[0]);
                     var stmt = q.stmt || '';
-                    if (stmt.indexOf('from projects') !== -1) {
-                        result = emptyProjectRow();
-                    } else {
-                        // All other queries (usershapes, userbkgs, etc.) return empty array.
-                        result = '[]';
-                    }
+                    result = stmt.indexOf('from projects') !== -1 ? emptyProjectRow() : '[]';
                 } catch (e) {
                     result = '[]';
                 }
-            } else if (method === 'database_stmt') {
-                result = '';
             } else if (method === 'io_getsettings') {
                 result = ',1';
             } else if (method === 'io_getfile') {

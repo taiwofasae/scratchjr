@@ -19,9 +19,6 @@ const MIME_TYPES = {
     '.sjr':  'application/octet-stream'
 };
 
-// Proxy endpoint: GET /proxy?url=https://...
-// Fetches the remote URL server-side and streams it back to the browser.
-// This bypasses CORS restrictions since the fetch happens on the server.
 function handleProxy(req, res) {
     var parsed = url.parse(req.url, true);
     var targetUrl = parsed.query.url;
@@ -48,15 +45,12 @@ function handleProxy(req, res) {
     }
 
     var client = parsedTarget.protocol === 'https:' ? https : http;
-
     var options = {
         hostname: parsedTarget.hostname,
         port: parsedTarget.port,
         path: parsedTarget.path,
         method: 'GET',
-        headers: {
-            'User-Agent': 'ScratchJr-Viewer/1.0'
-        }
+        headers: { 'User-Agent': 'ScratchJr-Viewer/1.0' }
     };
 
     var proxyReq = client.request(options, function (proxyRes) {
@@ -65,7 +59,6 @@ function handleProxy(req, res) {
             res.end('Remote server returned HTTP ' + proxyRes.statusCode);
             return;
         }
-
         res.writeHead(200, {
             'Content-Type': 'application/octet-stream',
             'Access-Control-Allow-Origin': '*',
@@ -86,7 +79,6 @@ function handleStatic(req, res) {
     var urlPath = req.url.split('?')[0];
     var filePath = path.join(ROOT, urlPath);
 
-    // Prevent directory traversal outside ROOT
     if (!filePath.startsWith(ROOT)) {
         res.writeHead(403);
         res.end('Forbidden');
@@ -115,7 +107,6 @@ function handleStatic(req, res) {
 
 const server = http.createServer(function (req, res) {
     var parsedUrl = url.parse(req.url);
-
     if (parsedUrl.pathname === '/proxy') {
         handleProxy(req, res);
     } else {

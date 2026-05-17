@@ -1,10 +1,4 @@
-// url-loader.js
-// Phase 2: load a .sjr file from the local filesystem via a file input.
-// Phase 3: load a .sjr file from a URL parameter (file_url).
-
 (function () {
-
-    // --- UI helpers ---
 
     function showOverlay(message) {
         var overlay = document.getElementById('url-loader-overlay');
@@ -24,19 +18,11 @@
         if (banner) {
             banner.textContent = message;
             banner.style.display = 'block';
-            // Auto-hide after 8 seconds
-            setTimeout(function () {
-                banner.style.display = 'none';
-            }, 8000);
+            setTimeout(function () { banner.style.display = 'none'; }, 8000);
         }
-        console.error('url-loader:', message);
+        console.error(message);
     }
 
-    // --- SJR parsing ---
-
-    // Unzips an ArrayBuffer containing a .sjr file.
-    // Populates window.WebAdapter.assetStore with all non-JSON assets.
-    // Returns a Promise that resolves with the parsed project data object.
     function parseSjr(arrayBuffer) {
         return JSZip.loadAsync(arrayBuffer).then(function (zip) {
             var jsonFile = null;
@@ -57,7 +43,6 @@
                 throw new Error('Not a valid .sjr file: no project JSON found in archive.');
             }
 
-            // Load all assets into the store and parse the project JSON in parallel.
             var assetPromises = assetFiles.map(function (item) {
                 return item.entry.async('base64').then(function (b64) {
                     var ext = item.name.split('.').pop().toLowerCase();
@@ -72,7 +57,6 @@
             var jsonPromise = jsonFile.async('string').then(function (str) {
                 try {
                     var parsed = JSON.parse(str);
-                    // Normalise keys to lowercase (same as IO.parseProjectData)
                     var normalised = {};
                     Object.keys(parsed).forEach(function (k) {
                         normalised[k.toLowerCase()] = parsed[k];
@@ -84,67 +68,60 @@
             });
 
             return Promise.all([jsonPromise].concat(assetPromises)).then(function (results) {
-                return results[0]; // the parsed project JSON
+                return results[0];
             });
         }).catch(function (err) {
-            if (err.message && err.message.indexOf('valid .sjr') !== -1) { throw err; }
-            if (err.message && err.message.indexOf('corrupted') !== -1) { throw err; }
+            if (err.message && (err.message.indexOf('valid .sjr') !== -1 || err.message.indexOf('corrupted') !== -1)) {
+                throw err;
+            }
             throw new Error('Not a valid .sjr file: could not unzip archive.');
         });
     }
 
-    // --- Runtime integration ---
-
-    // Polls until window.Project and window.ScratchJr.stage are available.
-    // Resolves when ready, rejects after 15 seconds.
     function waitForRuntimeReady() {
         return new Promise(function (resolve, reject) {
             var attempts = 0;
-            var max = 150; // 150 * 100ms = 15 seconds
             var interval = setInterval(function () {
                 attempts++;
-                var ready = window.Project &&
-                            window.ScratchJr &&
-                            window.ScratchJr.stage &&
-                            window.ScratchJr.stage.currentPage;
-                if (ready) {
+                if (window.Project && window.ScratchJr && window.ScratchJr.stage && window.ScratchJr.stage.currentPage) {
                     clearInterval(interval);
                     resolve();
-                } else if (attempts >= max) {
+                } else if (attempts >= 150) {
                     clearInterval(interval);
-                    reject(new Error('Timed out waiting for ScratchJr runtime to initialise.'));
+                    reject(new Error('Timed out waiting for ScratchJr to initialise.'));
                 }
             }, 100);
         });
     }
 
-    // Loads parsed project data into the running ScratchJr runtime.
     function loadProjectIntoRuntime(projectData) {
         return new Promise(function (resolve, reject) {
             try {
-                var projectJson = projectData.json;
-                if (!projectJson) {
-                    projectJson = projectData;
-                }
+                var projectJson = projectData.json || projectData;
                 if (typeof projectJson === 'string') {
                     projectJson = JSON.parse(projectJson);
                 }
                 if (!projectJson.pages) {
-                    throw new Error('Project data is missing pages — unexpected format.');
+                    throw new Error('Project data is missing pages.');
                 }
-                // Don't call Project.clear() — loadData handles its own reset
-                // and clear() can leave the UI in a broken state.
                 window.Project.loadData(projectJson, function () {
                     hideOverlay();
                     resolve();
                 });
             } catch (e) {
-                reject(new Error('Failed to load project into runtime: ' + e.message));
+                reject(new Error('Failed to load project: ' + e.message));
             }
         });
     }
 
-    // --- File input (Phase 2) ---
+    function loadFromBuffer(buffer) {
+        return parseSjr(buffer)
+            .then(function (projectData) {
+                return waitForRuntimeReady().then(function () {
+                    return loadProjectIntoRuntime(projectData);
+                });
+            });
+    }
 
     function setupFileInput() {
         var input = document.getElementById('sjr-file-input');
@@ -154,25 +131,15 @@
             var file = evt.target.files && evt.target.files[0];
             if (!file) { return; }
 
-            // Reset so the same file can be re-selected after an error.
             input.value = '';
-
             showOverlay('Loading ' + file.name + '...');
-
-            // Clear previous assets before loading a new project.
             window.WebAdapter.assetStore = {};
 
             var reader = new FileReader();
             reader.onload = function (e) {
-                parseSjr(e.target.result)
-                    .then(function (projectData) {
-                        return waitForRuntimeReady().then(function () {
-                            return loadProjectIntoRuntime(projectData);
-                        });
-                    })
-                    .catch(function (err) {
-                        showError(err.message);
-                    });
+                loadFromBuffer(e.target.result).catch(function (err) {
+                    showError(err.message);
+                });
             };
             reader.onerror = function () {
                 showError('Could not read file: ' + file.name);
@@ -181,18 +148,11 @@
         });
     }
 
-    // --- URL parameter loading (Phase 3) ---
-
-    // Returns the URL to fetch a remote .sjr file.
-    // On localhost, fetches directly (CORS allowed by the test host).
-    // On any other host, routes through the server-side proxy to bypass CORS.
+    // On a cloud server the fetch goes through /proxy to avoid CORS issues.
+    // On localhost the test host allows direct requests.
     function resolveFileUrl(fileUrl) {
-        var isLocalhost = window.location.hostname === 'localhost' ||
-                          window.location.hostname === '127.0.0.1';
-        if (isLocalhost) {
-            return fileUrl;
-        }
-        return '/proxy?url=' + encodeURIComponent(fileUrl);
+        var isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        return isLocalhost ? fileUrl : '/proxy?url=' + encodeURIComponent(fileUrl);
     }
 
     function readFileUrlParam() {
@@ -200,21 +160,14 @@
         var fileUrl = params.get('file_url');
         if (!fileUrl) { return; }
 
-        var parsed;
         try {
-            parsed = new URL(fileUrl);
+            var parsed = new URL(fileUrl);
+            if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') {
+                throw new Error('only http and https are supported');
+            }
         } catch (e) {
-            showError('Invalid file_url parameter: "' + fileUrl + '" is not a valid URL.');
+            showError('Invalid file_url: ' + e.message);
             return;
-        }
-
-        if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') {
-            showError('Invalid file_url: only http and https URLs are supported.');
-            return;
-        }
-
-        if (!fileUrl.toLowerCase().endsWith('.sjr')) {
-            console.warn('url-loader: file_url does not end in .sjr — attempting to load anyway.');
         }
 
         showOverlay('Downloading project...');
@@ -228,24 +181,14 @@
                 return response.arrayBuffer();
             })
             .then(function (buffer) {
-                return parseSjr(buffer);
-            })
-            .then(function (projectData) {
-                return waitForRuntimeReady().then(function () {
-                    return loadProjectIntoRuntime(projectData);
-                });
+                return loadFromBuffer(buffer);
             })
             .catch(function (err) {
                 showError('Could not load project: ' + err.message);
             });
     }
 
-    // --- Entry point ---
-
-    // Setup the file input listener immediately (DOM is ready since we use defer).
     setupFileInput();
-
-    // Check for file_url query parameter and load if present.
     readFileUrlParam();
 
 })();
