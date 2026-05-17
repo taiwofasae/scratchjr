@@ -8084,14 +8084,11 @@ $export($export.S, 'Reflect', {
 });
 
 
-/***/ }),
+ }),
 
-/***/ "./node_modules/core-js/modules/es6.reflect.get-prototype-of.js":
-/*!**********************************************************************!*\
-  !*** ./node_modules/core-js/modules/es6.reflect.get-prototype-of.js ***!
-  \**********************************************************************/
-/*! no static exports found */
-/***/ (function(module, exports, __webpack_require__) {
+ "./node_modules/core-js/modules/es6.reflect.get-prototype-of.js":
+
+(function(module, exports, __webpack_require__) {
 
 // 26.1.8 Reflect.getPrototypeOf(target)
 var $export = __webpack_require__(/*! ./_export */ "./node_modules/core-js/modules/_export.js");
@@ -8105,14 +8102,11 @@ $export($export.S, 'Reflect', {
 });
 
 
-/***/ }),
+ }),
 
-/***/ "./node_modules/core-js/modules/es6.reflect.get.js":
-/*!*********************************************************!*\
-  !*** ./node_modules/core-js/modules/es6.reflect.get.js ***!
-  \*********************************************************/
-/*! no static exports found */
-/***/ (function(module, exports, __webpack_require__) {
+ "./node_modules/core-js/modules/es6.reflect.get.js":
+
+ (function(module, exports, __webpack_require__) {
 
 // 26.1.6 Reflect.get(target, propertyKey [, receiver])
 var gOPD = __webpack_require__(/*! ./_object-gopd */ "./node_modules/core-js/modules/_object-gopd.js");
