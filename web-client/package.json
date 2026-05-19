@@ -1,7 +1,7 @@
 {
   "name": "scratchjr-viewer",
   "version": "1.0.0",
-  "description": "ScratchJr web viewer — loads .sjr files from filesystem or URL",
+  "description": "ScratchJr web client that loads .sjr files from filesystem or URL",
   "private": true,
   "scripts": {
     "build": "node setup.js",
