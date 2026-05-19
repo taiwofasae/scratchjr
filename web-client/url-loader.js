@@ -229,13 +229,6 @@
         tryInject();
     }
 
-    // On a cloud server the fetch goes through /proxy to avoid CORS issues.
-    // On localhost the test host allows direct requests.
-    function resolveFileUrl(fileUrl) {
-        var isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-        return isLocalhost ? fileUrl : '/proxy?url=' + encodeURIComponent(fileUrl);
-    }
-
     function readFileUrlParam() {
         var params = new URLSearchParams(window.location.search);
         var fileUrl = params.get('file_url');
@@ -254,7 +247,7 @@
         showOverlay('Downloading project...');
         window.WebAdapter.assetStore = {};
 
-        fetch(resolveFileUrl(fileUrl), { mode: 'cors' })
+        fetch(fileUrl, { mode: 'cors' })
             .then(function (response) {
                 if (!response.ok) {
                     throw new Error('HTTP ' + response.status + ': ' + response.statusText);

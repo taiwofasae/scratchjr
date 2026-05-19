@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:xlink="http://www.w3.org/1999/xlink">
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta charset="utf-8">
+<title>ScratchJr Viewer</title>
+
+<style>
+    #backdrop,
+    #modaldialog {
+        display: none !important;
+    }
+    #url-loader-error {
+        position: fixed;
+        top: 12px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: #D62222;
+        color: #fff;
+        padding: 10px 20px;
+        border-radius: 6px;
+        font-family: sans-serif;
+        font-size: 14px;
+        z-index: 99999;
+        max-width: 80%;
+        text-align: center;
+        display: none;
+    }
+    #url-loader-overlay {
+        position: fixed;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        background: rgba(255, 255, 255, 0.92);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: 99999;
+        font-family: sans-serif;
+    }
+    #url-loader-overlay.hidden {
+        display: none;
+    }
+    .url-loader-spinner {
+        width: 48px;
+        height: 48px;
+        border: 5px solid #ddd;
+        border-top-color: #4B8CC2;
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+        margin-bottom: 16px;
+    }
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+    #url-loader-status {
+        color: #555;
+        font-size: 15px;
+    }
+</style>
+
+<script>
+    window.scratchJrPage = 'editor';
+</script>
+<!-- All paths are flat — everything lives in the same dist/ directory -->
+<script src="web-adapter.js"></script>
+<script src="app.bundle.js"></script>
+<script src="jszip.min.js"></script>
+<script src="url-loader.js" defer></script>
+</head>
+
+<body style="background: white; margin: 0;">
+
+<div class="frame" id="frame"></div>
+<div class="libframe" id="libframe"></div>
+<div class="paintframe" id="paintframe"></div>
+
+<div id="url-loader-overlay" class="hidden">
+    <div class="url-loader-spinner"></div>
+    <div id="url-loader-status">Loading project...</div>
+</div>
+
+<div id="url-loader-error"></div>
+<input type="file" id="sjr-file-input" accept=".sjr" style="display:none;">
+
+</body>
+</html>
