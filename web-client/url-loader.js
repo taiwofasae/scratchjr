@@ -171,7 +171,7 @@
         });
     }
 
-    // Injects the Open button next to the home/back button (#flip) in the
+    // Injects the Open button next to the home/back button in the
     // ScratchJr toolbar. Uses MutationObserver because the runtime builds
     // the toolbar asynchronously after page load.
     function injectOpenButton() {
