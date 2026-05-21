@@ -77,7 +77,7 @@
             if (err.message && (err.message.indexOf('valid .sjr') !== -1 || err.message.indexOf('corrupted') !== -1)) {
                 throw err;
             }
-            throw new Error('Not a valid .sjr file: could not unzip archive.');
+            throw new Error('Could not unzip archive: ' + err.message);
         });
     }
 
