@@ -86,7 +86,7 @@
             var attempts = 0;
             var interval = setInterval(function () {
                 attempts++;
-                if (window.Project && window.ScratchJr && window.ScratchJr.stage && window.ScratchJr.stage.currentPage) {
+                if (window.Project && window.ScratchJr && window.ScratchJr.stage) {
                     clearInterval(interval);
                     resolve();
                 } else if (attempts >= 150) {
