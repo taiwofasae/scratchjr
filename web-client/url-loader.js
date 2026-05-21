@@ -31,6 +31,8 @@
             zip.forEach(function (relativePath, zipEntry) {
                 if (!zipEntry.dir) {
                     var name = relativePath.split('/').pop();
+                    // Skip thumbnail folder contents — they are preview images only
+                    if (relativePath.toLowerCase().indexOf('thumbnail') !== -1) { return; }
                     if (name.match(/\.json$/i)) {
                         jsonFile = zipEntry;
                     } else {
@@ -57,6 +59,7 @@
             var jsonPromise = jsonFile.async('string').then(function (str) {
                 try {
                     var parsed = JSON.parse(str);
+                    // Normalise keys to lowercase
                     var normalised = {};
                     Object.keys(parsed).forEach(function (k) {
                         normalised[k.toLowerCase()] = parsed[k];
