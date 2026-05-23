@@ -1,5 +1,32 @@
 (function () {
 
+    // Intercept all XHR requests to add a 5-second timeout.
+    // This prevents sprite/asset fetches from the CDN hanging forever
+    // and blocking Project.loadwait from completing.
+    var _xhrOpen = XMLHttpRequest.prototype.open;
+    XMLHttpRequest.prototype.open = function(method, url, async) {
+        this._url = url;
+        _xhrOpen.apply(this, arguments);
+        if (this.timeout === 0) {
+            this.timeout = 5000;
+        }
+    };
+
+    var _xhrSend = XMLHttpRequest.prototype.send;
+    XMLHttpRequest.prototype.send = function(body) {
+        if (!this.ontimeout) {
+            var self = this;
+            this.ontimeout = function() {
+                // Trigger readystatechange with empty response so callbacks fire
+                Object.defineProperty(self, 'readyState', { get: function() { return 4; }, configurable: true });
+                Object.defineProperty(self, 'responseText', { get: function() { return ''; }, configurable: true });
+                Object.defineProperty(self, 'status', { get: function() { return 0; }, configurable: true });
+                if (self.onreadystatechange) { self.onreadystatechange(); }
+            };
+        }
+        _xhrSend.apply(this, arguments);
+    };
+
     window.WebAdapter = {
         assetStore: {}
     };
@@ -73,7 +100,11 @@
 
         getmedia: function (md5, fcn) {
             var data = window.WebAdapter.assetStore[md5];
-            if (fcn) { fcn(data || ''); }
+            if (fcn) {
+                // Return stored asset or a minimal valid SVG so the runtime
+                // can complete loading without hanging on missing assets
+                fcn(data || btoa('<svg xmlns="http://www.w3.org/2000/svg" width="1" height="1"></svg>'));
+            }
         },
 
         setmedia: function (str, ext, fcn) {

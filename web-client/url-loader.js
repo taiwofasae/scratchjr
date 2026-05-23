@@ -99,16 +99,24 @@
 
     function loadProjectIntoRuntime(projectData) {
         return new Promise(function (resolve, reject) {
+            var settled = false;
+            function done() {
+                if (settled) { return; }
+                settled = true;
+                hideOverlay();
+                resolve();
+            }
+
             try {
                 var projectJson = projectData.json || projectData;
                 if (typeof projectJson === 'string') {
                     projectJson = JSON.parse(projectJson);
                 }
                 if (!projectJson.pages) {
-                    throw new Error('Project data is missing pages.');
+                    reject(new Error('Project data is missing pages.'));
+                    return;
                 }
 
-                // Set metadata so the runtime knows the project name etc.
                 if (window.Project.metadata !== undefined) {
                     window.Project.metadata = {
                         name: projectData.name || 'Untitled',
@@ -119,20 +127,8 @@
                     };
                 }
 
-                // Clear the current stage and sprite panel before loading new project
-                window.Project.clear();
-
                 window.Project.loadData(projectJson, function () {
-                    // Refresh the sprite panel and page thumbnails
-                    if (window.ScratchJr && window.ScratchJr.stage && window.ScratchJr.stage.currentPage) {
-                        window.ScratchJr.stage.currentPage.update();
-                        window.ScratchJr.changed = false;
-                    }
-                    if (window.UI) {
-                        window.UI.needsScroll();
-                    }
-                    hideOverlay();
-                    resolve();
+                    done();
                 });
             } catch (e) {
                 reject(new Error('Failed to load project: ' + e.message));

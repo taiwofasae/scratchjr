@@ -91,6 +91,34 @@ content = content
     .replace(/gettingstarted\.html/g, 'index.html');
 log('  Applied: navigation redirect to index.html');
 
+// Patch requestFromServer (Samples version) to add XHR timeout
+var rfsOld1 = "function requestFromServer(pos, url, whenDone) {\n            var xmlrequest = new XMLHttpRequest();\n            xmlrequest.addEventListener('error', transferFailed, false);\n            xmlrequest.onreadystatechange = function () {\n                if (xmlrequest.readyState == 4) {\n                    whenDone(pos, xmlrequest.responseText);\n                }\n            };\n            xmlrequest.open('GET', url, true);\n            xmlrequest.send(null);\n            function transferFailed(e) {\n                e.preventDefault();\n                e.stopPropagation();\n                // Failed loading\n            }\n        }";
+var rfsNew1 = "function requestFromServer(pos, url, whenDone) {\n            var xmlrequest = new XMLHttpRequest();\n            var done = false;\n            xmlrequest.addEventListener('error', transferFailed, false);\n            xmlrequest.onreadystatechange = function () {\n                if (xmlrequest.readyState == 4 && !done) { done = true; whenDone(pos, xmlrequest.responseText); }\n            };\n            xmlrequest.open('GET', url, true);\n            xmlrequest.timeout = 5000;\n            xmlrequest.ontimeout = function() { if (!done) { done = true; whenDone(pos, ''); } };\n            xmlrequest.send(null);\n            function transferFailed(e) { e.preventDefault(); e.stopPropagation(); if (!done) { done = true; whenDone(pos, ''); } }\n        }";
+if (content.includes(rfsOld1)) {
+    content = content.replace(rfsOld1, rfsNew1);
+    log('  Applied: requestFromServer(pos) XHR timeout');
+} else {
+    log('  WARNING: requestFromServer(pos) patch target not found — skipping');
+}
+
+// Patch requestFromServer (IO version) to add XHR timeout
+var rfsOld2 = "function requestFromServer(url, whenDone) {\n            var xmlrequest = new XMLHttpRequest();\n            xmlrequest.addEventListener('error', transferFailed, false);\n            xmlrequest.onreadystatechange = function () {\n                if (xmlrequest.readyState == 4) {\n                    whenDone(xmlrequest.responseText);\n                }\n            };";
+var rfsNew2 = "function requestFromServer(url, whenDone) {\n            var xmlrequest = new XMLHttpRequest();\n            var done = false;\n            xmlrequest.addEventListener('error', transferFailed, false);\n            xmlrequest.onreadystatechange = function () {\n                if (xmlrequest.readyState == 4 && !done) { done = true; whenDone(xmlrequest.responseText); }\n            };\n            xmlrequest.timeout = 5000;\n            xmlrequest.ontimeout = function() { if (!done) { done = true; whenDone(''); } };";
+if (content.includes(rfsOld2)) {
+    content = content.replace(rfsOld2, rfsNew2);
+    log('  Applied: requestFromServer(url) XHR timeout');
+} else {
+    log('  WARNING: requestFromServer(url) patch target not found — skipping');
+}
+var loadwaitOld = 'value: function loadwait(whenDone) {\n            if (interval != null) {\n                window.clearInterval(interval);\n            }\n            mediaCountBase = mediaCount;\n            if (mediaCount <= 0) {\n                Project.getStarted(whenDone);\n            } else {\n                interval = window.setInterval(function () {\n                    Project.loadTask(whenDone);\n                }, 32);\n            }\n        }';
+var loadwaitNew = 'value: function loadwait(whenDone) {\n            if (interval != null) {\n                window.clearInterval(interval);\n            }\n            mediaCountBase = mediaCount;\n            if (mediaCount <= 0) {\n                Project.getStarted(whenDone);\n            } else {\n                var loadwaitStart = Date.now();\n                interval = window.setInterval(function () {\n                    if (Date.now() - loadwaitStart > 10000) {\n                        mediaCount = 0;\n                    }\n                    Project.loadTask(whenDone);\n                }, 32);\n            }\n        }';
+if (content.includes(loadwaitOld)) {
+    content = content.replace(loadwaitOld, loadwaitNew);
+    log('  Applied: loadwait timeout patch');
+} else {
+    log('  WARNING: loadwait patch target not found — skipping');
+}
+
 log('Building dist/...');
 if (fs.existsSync(DIST_DIR)) {
     fs.rmSync(DIST_DIR, { recursive: true });
