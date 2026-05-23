@@ -108,15 +108,15 @@ if (content.includes(rfsOld2)) {
     content = content.replace(rfsOld2, rfsNew2);
     log('  Applied: requestFromServer(url) XHR timeout');
 } else {
-    log('  WARNING: requestFromServer(url) patch target not found — skipping');
+    log('WARNING: requestFromServer(url) patch target not found — skipping');
 }
 var loadwaitOld = 'value: function loadwait(whenDone) {\n            if (interval != null) {\n                window.clearInterval(interval);\n            }\n            mediaCountBase = mediaCount;\n            if (mediaCount <= 0) {\n                Project.getStarted(whenDone);\n            } else {\n                interval = window.setInterval(function () {\n                    Project.loadTask(whenDone);\n                }, 32);\n            }\n        }';
 var loadwaitNew = 'value: function loadwait(whenDone) {\n            if (interval != null) {\n                window.clearInterval(interval);\n            }\n            mediaCountBase = mediaCount;\n            if (mediaCount <= 0) {\n                Project.getStarted(whenDone);\n            } else {\n                var loadwaitStart = Date.now();\n                interval = window.setInterval(function () {\n                    if (Date.now() - loadwaitStart > 10000) {\n                        mediaCount = 0;\n                    }\n                    Project.loadTask(whenDone);\n                }, 32);\n            }\n        }';
 if (content.includes(loadwaitOld)) {
     content = content.replace(loadwaitOld, loadwaitNew);
-    log('  Applied: loadwait timeout patch');
+    log('Applied: loadwait timeout patch');
 } else {
-    log('  WARNING: loadwait patch target not found — skipping');
+    log('WARNING: loadwait patch target not found — skipping');
 }
 
 log('Building dist/...');
