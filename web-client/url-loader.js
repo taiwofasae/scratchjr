@@ -31,6 +31,8 @@
             zip.forEach(function (relativePath, zipEntry) {
                 if (!zipEntry.dir) {
                     var name = relativePath.split('/').pop();
+                    // Skip thumbnail folder contents — they are preview images only
+                    if (relativePath.toLowerCase().indexOf('thumbnail') !== -1) { return; }
                     if (name.match(/\.json$/i)) {
                         jsonFile = zipEntry;
                     } else {
@@ -57,6 +59,7 @@
             var jsonPromise = jsonFile.async('string').then(function (str) {
                 try {
                     var parsed = JSON.parse(str);
+                    // Normalise keys to lowercase
                     var normalised = {};
                     Object.keys(parsed).forEach(function (k) {
                         normalised[k.toLowerCase()] = parsed[k];
@@ -74,7 +77,7 @@
             if (err.message && (err.message.indexOf('valid .sjr') !== -1 || err.message.indexOf('corrupted') !== -1)) {
                 throw err;
             }
-            throw new Error('Not a valid .sjr file: could not unzip archive.');
+            throw new Error('Could not unzip archive: ' + err.message);
         });
     }
 
@@ -83,7 +86,7 @@
             var attempts = 0;
             var interval = setInterval(function () {
                 attempts++;
-                if (window.Project && window.ScratchJr && window.ScratchJr.stage && window.ScratchJr.stage.currentPage) {
+                if (window.Project && window.ScratchJr && window.ScratchJr.stage) {
                     clearInterval(interval);
                     resolve();
                 } else if (attempts >= 150) {
