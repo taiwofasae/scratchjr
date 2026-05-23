@@ -4,13 +4,18 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta http-equiv="cache-control" content="no-cache">
 <meta charset="utf-8">
 <title>ScratchJr Viewer</title>
 
 <style>
+    /* Hide the ScratchJr loading modal entirely*/
     #backdrop,
     #modaldialog {
         display: none !important;
+    }
+    #sjr-file-btn {
+        display: none;
     }
     #url-loader-error {
         position: fixed;
@@ -64,11 +69,10 @@
 <script>
     window.scratchJrPage = 'editor';
 </script>
-<!-- All paths are flat — everything lives in the same dist/ directory -->
-<script src="web-adapter.js"></script>
-<script src="app.bundle.js"></script>
-<script src="jszip.min.js"></script>
-<script src="url-loader.js" defer></script>
+<script src="../../../web-client/web-adapter.js"></script>
+<script src="app.bundle.v2.js"></script>
+<script src="../../../web-client/jszip.min.js"></script>
+<script src="../../../web-client/url-loader.js" defer></script>
 </head>
 
 <body style="background: white; margin: 0;">
@@ -83,7 +87,10 @@
 </div>
 
 <div id="url-loader-error"></div>
+
+<!-- Hidden file input for loading .sjr files from disk -->
 <input type="file" id="sjr-file-input" accept=".sjr" style="display:none;">
+<button id="sjr-file-btn" onclick="document.getElementById('sjr-file-input').click()">Open .sjr file</button>
 
 </body>
 </html>

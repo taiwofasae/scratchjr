@@ -1,0 +1,11 @@
+{
+  "name": "scratchjr-viewer",
+  "version": "1.0.0",
+  "description": "ScratchJr web client that loads .sjr files from filesystem or URL",
+  "private": true,
+  "scripts": {
+    "build": "node setup.js",
+    "start": "node serve.js",
+    "dev": "node setup.js && node serve.js"
+  }
+}
